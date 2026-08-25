@@ -77,7 +77,7 @@ indistinguishable from an empty memory unless someone says it out loud.
 Only if step 5 passed:
 
 ```bash
-ml-recall "test" --top-k 1
+"$HOME/.memorylake/bin/ml-recall" "test" --top-k 1
 ```
 
 An empty result is a pass — it proves the path works. A non-zero exit is a

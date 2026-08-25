@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 # ml-recall — search Memory Lake and print a context-budget-friendly digest.
 #
+# Deliberately NOT in a top-level bin/. Claude Code adds a plugin's bin/ to
+# PATH, which is convenient, but claude.ai-hosted plugins reject the directory
+# outright: an executable added to PATH is not shown on the admin approval
+# surface, so an organization cannot review what it is approving. The
+# SessionStart hook installs this into the shared ~/.memorylake/bin instead,
+# and everything model-facing names that absolute path — the same mechanism
+# the Codex harness has always used, for a different reason (Codex has no
+# bin/-on-PATH mechanism at all).
+#
+# The relative source path below resolves correctly from BOTH locations:
+# <plugin>/scripts/../scripts/lib/common.sh and
+# ~/.memorylake/bin/../scripts/lib/common.sh.
+#
 # A thin wrapper over `memorylake search`. The wrapping exists for one reason:
 # the raw CLI prints the full API payload as pretty JSON, and a single search
 # can run to thousands of tokens. The trimming rules below are inherited from

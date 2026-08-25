@@ -114,9 +114,14 @@ once per session that Memory Lake may hold related memories, and how to phrase
 a search. Claude writes the query itself:
 
 ```bash
-ml-recall "user's preferred editor"
-ml-recall "Q4 revenue figures" --top-k 10
+~/.memorylake/bin/ml-recall "user's preferred editor"
+~/.memorylake/bin/ml-recall "Q4 revenue figures" --top-k 10
 ```
+
+The session-start hook installs `ml-recall` at that fixed path, shared with the
+Codex harness. This plugin deliberately ships no top-level `bin/`: Claude Code
+would put it on PATH, but claude.ai-hosted plugins reject `bin/` because a PATH
+executable never appears on the admin approval surface.
 
 The hook makes no network call — it only injects the reminder, so it adds no
 latency to reading local files.
@@ -158,7 +163,7 @@ and idempotent through the same hash state the hook uses.
 the read hook does not fire for it. The reminder only appears when Claude opens
 an individual memory file — high precision, but it will not catch every session
 where Memory Lake would have helped. Ask for a recall directly, or run
-`ml-recall` yourself, when you know something is stored.
+`~/.memorylake/bin/ml-recall` yourself, when you know something is stored.
 
 ## Privacy
 

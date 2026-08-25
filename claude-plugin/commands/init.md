@@ -157,10 +157,11 @@ Run the connectivity check and one end-to-end recall:
 
 ```bash
 memorylake project list --workspace <ws>
-ml-recall "test" --top-k 1 || true
+"$HOME/.memorylake/bin/ml-recall" "test" --top-k 1 || true
 ```
 
-(`ml-recall` may not be on PATH until the plugin reloads — a failure here is
+(`ml-recall` is installed there by the session-start hook, so on a machine
+where this plugin has never run a session yet it may be absent — a failure here is
 fine if stage 1 just installed the CLI; say so instead of treating it as an
 error.)
 

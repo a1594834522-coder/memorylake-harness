@@ -24,8 +24,8 @@ cannot hold.
 ## Searching
 
 ```bash
-ml-recall "user's preferred editor"
-ml-recall "Q4 revenue figures" --top-k 10
+~/.memorylake/bin/ml-recall "user's preferred editor"
+~/.memorylake/bin/ml-recall "Q4 revenue figures" --top-k 10
 ```
 
 Write the query well. It matters more than the number of attempts:

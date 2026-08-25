@@ -59,7 +59,7 @@ read -r -d '' reminder <<'EOF'
 only this repository on this machine. Memory Lake may hold related memories
 written from other projects, other machines, or other clients.
 
-To search it, run: ml-recall "<query>"
+To search it, run: ~/.memorylake/bin/ml-recall "<query>"
 
 Write the query yourself — it should describe what you need for the task at
 hand, not restate the file you are reading. Phrase it well: statement-style
