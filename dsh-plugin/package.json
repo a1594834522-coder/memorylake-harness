@@ -1,6 +1,6 @@
 {
   "name": "@memorylake/dsh-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Memory Lake memory layer for DeepSeek Harness (dsh): persistent cross-session memory tools, prompt guidance, and setup skills",
   "type": "module",
   "license": "MIT",

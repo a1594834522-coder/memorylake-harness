@@ -109,9 +109,28 @@ Otherwise gather the pieces:
 
 1. **Workspace**: \`memorylake ws list\`. One workspace → use it. Several →
    let the user pick (use the \`ask_user_question\` tool).
-2. **Actor**: \`memorylake actor list --workspace <ws>\`. Prefer the HUMAN
-   actor bound to the workspace. None bound → offer to create one
-   (\`memorylake actor create\` + \`actor bind\`).
+2. **Actor**: start from the actor the API key itself represents.
+
+   \`\`\`bash
+   memorylake actor me                        # the caller's own actor -> .id
+   memorylake actor list --workspace <ws>     # bound actors -> .items[].actor_id
+   \`\`\`
+
+   The field names differ between the two: \`.id\` versus \`.actor_id\`.
+
+   - **Bound to this workspace** → offer it first, labelled \`(default)\`, and
+     preselect it so Enter accepts. If it is the only actor bound, do not ask
+     at all — say which actor you used and move on.
+   - **Not bound** → ignore it and let the user pick from the workspace's
+     actors as usual (via \`ask_user_question\`). This is common rather than
+     exceptional: the actor is created with the account, while workspace
+     membership is a separate, explicit act.
+   - **\`actor me\` failed** (older CLI or deployment, network) → fall back
+     silently to picking from the workspace's actors. Do not report it.
+
+   A deleted actor keeps its binding with a non-\`ACTIVE\` \`status\`; skip those.
+   None bound at all → offer to create one (\`memorylake actor create\` +
+   \`actor bind\`).
 
 Write \`~/.memorylake/harness/config.md\`:
 
