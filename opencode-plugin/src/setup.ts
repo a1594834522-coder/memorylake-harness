@@ -83,11 +83,28 @@ put it in a file, and do not repeat it in your reply.
 
 \`\`\`bash
 memorylake ws list                          # one workspace -> use it
-memorylake actor list --workspace <ws-id>   # prefer the HUMAN actor
+memorylake actor me                         # the caller's own actor -> .id
+memorylake actor list --workspace <ws-id>   # bound actors -> .items[].actor_id
 \`\`\`
 
-With several workspaces, ask which one. With no actor bound, offer to create
-one (\`memorylake actor create\` then \`memorylake actor bind\`).
+With several workspaces, ask which one.
+
+For the actor, start from \`actor me\` — the actor the API key itself
+represents. The field names differ between the two calls: \`.id\` there,
+\`.actor_id\` in the workspace listing.
+
+- **bound to this workspace** → offer it first, labelled \`(default)\`, and
+  preselect it so Enter accepts. If it is the only actor bound, do not ask at
+  all — say which actor you used and move on.
+- **not bound** → ignore it and let the user pick from the workspace's actors
+  as usual. This is common rather than exceptional: the actor is created with
+  the account, while workspace membership is a separate, explicit act.
+- **\`actor me\` failed** (older CLI or deployment, network) → fall back
+  silently to the workspace's actors. Do not report it.
+
+A deleted actor keeps its binding with a non-\`ACTIVE\` \`status\`; skip those.
+None bound at all → offer to create one (\`memorylake actor create\` then
+\`memorylake actor bind\`).
 
 Then write \`~/.memorylake/harness/config.md\`:
 
