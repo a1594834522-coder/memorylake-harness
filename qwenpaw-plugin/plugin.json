@@ -1,0 +1,29 @@
+{
+  "id": "memory-memorylake",
+  "name": "Memory Lake",
+  "version": "0.1.0",
+  "description": "Memory Lake as the long-term memory backend: cross-project, cross-machine, cross-client memory shared with Claude Code, Codex, dsh, and opencode.",
+  "author": "Memory Lake",
+  "type": "memory",
+  "entry": {
+    "backend": "plugin.py",
+    "frontend": "frontend/dist/index.js"
+  },
+  "dependencies": [],
+  "qwenpaw_version": { "min": "2.2.1", "max": "3.0.0" },
+  "pack_exclude": [
+    "tests",
+    "DESIGN.md",
+    "pyproject.toml",
+    ".gitignore",
+    "frontend/src",
+    "frontend/package.json",
+    "frontend/package-lock.json",
+    "frontend/tsconfig.json",
+    "frontend/vite.config.ts",
+    "frontend/node_modules"
+  ],
+  "meta": {
+    "memory_backends": [{ "id": "memorylake", "label": "Memory Lake" }]
+  }
+}

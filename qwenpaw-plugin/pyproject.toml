@@ -1,0 +1,6 @@
+# Development-only: test configuration. Not read by QwenPaw, excluded from the
+# published zip via plugin.json `pack_exclude`.
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
