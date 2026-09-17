@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """``POST /api/memorylake/discover`` — what the Console form needs to offer
-workspace and actor pickers instead of free-text id fields.
+workspace, actor, and project pickers instead of free-text id fields.
 
 The browser cannot run the CLI, so the form sends the credentials it is
 about to save and this endpoint lists what they can see. Three credential
@@ -54,6 +54,11 @@ class ActorItem(BaseModel):
     status: str = ""
 
 
+class ProjectItem(BaseModel):
+    id: str
+    name: str = ""
+
+
 class DiscoverResponse(BaseModel):
     ok: bool
     error: str = ""
@@ -62,6 +67,7 @@ class DiscoverResponse(BaseModel):
     login: str = ""
     workspaces: list[WorkspaceItem] = Field(default_factory=list)
     actors: list[ActorItem] = Field(default_factory=list)
+    projects: list[ProjectItem] = Field(default_factory=list)
     me: str = ""
 
 
@@ -132,7 +138,15 @@ async def discover(
 
         workspace = body.workspace.strip() or (workspaces[0].id if len(workspaces) == 1 else "")
         actors: list[ActorItem] = []
+        projects: list[ProjectItem] = []
         if workspace:
+            result = await run(cli.project_list_argv(binary, workspace))
+            if result.ok:
+                projects = [
+                    ProjectItem(id=str(i.get("id", "")), name=str(i.get("name") or ""))
+                    for i in _items(cli.parse_json(result.stdout))
+                    if i.get("id")
+                ]
             result = await run(cli.actor_list_argv(binary, workspace))
             if result.ok:
                 actors = [
@@ -145,7 +159,8 @@ async def discover(
                     if i.get("actor_id")
                 ]
         return DiscoverResponse(
-            ok=True, cli=str(binary), login=login, workspaces=workspaces, actors=actors, me=me,
+            ok=True, cli=str(binary), login=login, workspaces=workspaces, actors=actors,
+            projects=projects, me=me,
         )
     finally:
         if scratch is not None:

@@ -32,6 +32,11 @@ class MemoryLakeConfig(BaseModel):
     top_k: int = Field(default=5, ge=1, le=20)
     install_cli: bool = True
     timeout_seconds: float = Field(default=20.0, ge=1.0, le=120.0)
+    # Conversation sync (D4): off unless the user turns it on in the Console.
+    sync_conversations: bool = False
+    sync_interval: int = Field(default=1, ge=1, le=20)
+    project: str = ""
+    max_message_chars: int = Field(default=8000, ge=500, le=64000)
 
 
 @dataclass(frozen=True)
@@ -48,12 +53,35 @@ class EffectiveConfig:
     top_k: int = 5
     install_cli: bool = True
     timeout_seconds: float = 20.0
+    sync_conversations: bool = False
+    sync_interval: int = 1
+    project: str = ""
+    max_message_chars: int = 8000
     shared_config_present: bool = False
     sources: dict[str, str] = field(default_factory=dict)
 
     @property
     def can_write(self) -> bool:
         return self.state == "ready" and bool(self.actor)
+
+    @property
+    def can_sync(self) -> bool:
+        """Conversation sync needs a human actor to attribute the user's
+        messages to and a project for the conversation to live in."""
+        return (
+            self.state == "ready"
+            and self.sync_conversations
+            and bool(self.actor)
+            and bool(self.project)
+        )
+
+    @property
+    def sync_blocker(self) -> str:
+        """Why sync is off although the switch is on; empty when it runs."""
+        if not self.sync_conversations or self.state != "ready":
+            return ""
+        missing = [name for name, value in (("actor", self.actor), ("project", self.project)) if not value]
+        return f"no {' and no '.join(missing)} configured" if missing else ""
 
     @property
     def owns_login(self) -> bool:
@@ -96,6 +124,10 @@ def resolve_config(
         top_k=agent.top_k,
         install_cli=agent.install_cli,
         timeout_seconds=agent.timeout_seconds,
+        sync_conversations=agent.sync_conversations,
+        sync_interval=agent.sync_interval,
+        project=agent.project.strip(),
+        max_message_chars=agent.max_message_chars,
         shared_config_present=shared is not None,
         sources=sources,
     )

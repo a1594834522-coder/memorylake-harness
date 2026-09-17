@@ -243,18 +243,57 @@ machine-wide switch does not reach it. The per-project override
 not a repository checkout and there is no session directory to walk up from.
 `MEMORYLAKE_PLUGIN_DATA` relocates the shared tree, as in every harness.
 
-### D4 — No automatic write-back
+### D4 — Conversation sync, opt-in, text only (revised in 0.2.0)
 
-`auto_memory()` returns `""` and `get_auto_memory_interval()` returns `0`.
-The platform will still call `submit_auto_memory` on compaction; the worker
-gets an empty result and records a no-op.
+v0.1.0 had no automatic write-back. v0.2.0 adds it as an **opt-in**
+(`sync_conversations`, default `false`) and takes the conversation route
+rather than local extraction: `auto_memory()` appends the turns' text to one
+Memory Lake conversation per QwenPaw session (`memorylake conversation
+message append`) and the server distills memories from it. Reasons:
 
-This is the same position as every other harness (opencode D4): memories are
-written when the model calls `memory_remember`, and nothing else is uploaded.
-QwenPaw makes the opposite very easy — ReMe Light and PowerContext both write
-every turn — and a v2 may offer an opt-in extraction step. It is not in v1
-because it changes what the product uploads, and that decision belongs to a
-release note, not to a default.
+- The CLI's conversation commands exist for exactly this: messages are
+  stored at once, facts are extracted in the background, `--custom-id`
+  makes an append idempotent, `cook-status` tells when the memory is built.
+- Local extraction would mean running an LLM in the plugin, i.e. rebuilding
+  ReMe Light, and paying for it twice.
+- dsh's roadmap already names "session → conversation cook"; one server-side
+  semantics for all harnesses.
+
+**When QwenPaw calls us** (`agents/middlewares.py`, `command_handler.py`):
+after every `sync_interval` external user turns (`on_reply`), when the
+context is compacted (`on_compress_context`, all pending turns regardless
+of the interval), on the user's `/compact`, and on `/new`. Automation
+sources (cron, heartbeat, portability) never trigger it. A turn is the
+external user message plus everything up to the next one; internal control
+messages are already stripped by the platform. Turns can arrive more than
+once (compaction overlapping with the periodic batch), which is why every
+append carries the QwenPaw message id as `--custom-id`.
+
+**What is sent.** TEXT blocks only — the user's words and the assistant's
+words. Tool calls, tool results, thinking, images, and files are dropped
+(user decision; it also keeps file contents off the wire). The synthetic
+recall exchange the platform injects before model calls is stripped first.
+Messages longer than `max_message_chars` are clipped and flagged
+`truncated=true` in metadata.
+
+**Identities.** The user's messages go out as the configured human actor;
+the assistant's as an `ASSISTANT` actor the plugin creates once per Agent
+(custom id `qwenpaw-agent:<agent_id>`, bound to the workspace). The
+conversation's custom id is `qwenpaw:<agent_id>:<session_id>`; it needs a
+`project` (the CLI requires one), which is why sync stays inactive — and
+says so in `/memorylake-status` — until both actor and project are set.
+
+**Reliability.** State lives in `plugin-state/memory-memorylake/sync/<agent>/`:
+the assistant actor id, and per session the conversation id, the ids
+already appended, and the messages of a batch that did not fully land.
+Those are retried at the start of the next batch. Appends to one
+conversation are serialized server-side; QwenPaw's auto-memory worker is
+serial per Agent, so we never race ourselves. We never pass `--wait`: cook
+is background work and must not hold the worker.
+
+**Prompt.** When sync is active the system prompt gains a paragraph telling
+the model the conversation is recorded and `memory_remember` is for facts
+the user explicitly asks to keep, so nothing is stored twice.
 
 ### D5 — Automatic recall on, using the platform's flow
 
@@ -473,7 +512,11 @@ enough that stubbing it would test the stub):
 - `cli` — argv construction with `--`, resolution order, failure classification
 - `render` — ordering, clipping, no score ever rendered, empty hint
 - `install` — good checksum installs, bad checksum deletes and raises
-- `manager` — each row of the D7 table; `_search_for_auto_memory` returns
+- `sync` — text-only shaping, identity lookup/create, idempotent replay,
+  failed-batch retry, state files surviving garbage
+- `manager` — sync off → interval 0 and no prompt paragraph; on without a
+  project → inactive and stated; on → turns appended, synthetic recall
+  stripped, failures reflected in status; each row of the D7 table; `_search_for_auto_memory` returns
   `None` on empty and on failure; `memory_remember` without a fact id does not
   claim success; tool names are exactly the three shared names
 
@@ -485,7 +528,7 @@ Code.
 
 ## 8. Non-goals
 
-- Automatic write-back (D4)
+- Local memory extraction (D4: the server distills; the plugin only records)
 - Coexisting with ReMe Light on one Agent (D1)
 - Direct HTTP to Memory Lake
 - Showing relevance scores to the model
@@ -498,7 +541,20 @@ Code.
 
 ## 9. Status
 
-Implemented as specified: all modules in §4, 70 tests against the real
+**0.2.0 (2026-09-17):** conversation sync (D4 revised) implemented in
+`memorylake_backend/sync.py`, wired through `auto_memory` /
+`get_auto_memory_interval`, with the Console form's sync section (switch,
+project picker, interval) and the discover endpoint listing projects. 92
+tests. Verified end to end against the real CLI and backend: the manager
+created the per-Agent `ASSISTANT` actor and the per-session conversation,
+appended user and assistant text with the right actors, dropped a tool-only
+message, and a replay of the same turns appended nothing. Server-side
+probing settled two facts the design relies on: an `ASSISTANT` actor is
+accepted as a conversation participant, and `--timestamp` must be
+offset-aware (agentscope stamps naive local time, so `sync.normalize_timestamp`
+converts).
+
+**0.1.0:** implemented as specified: all modules in §4, 70 tests against the real
 `qwenpaw` 2.2.1 base class, the Console form built and committed. Verified
 beyond unit tests:
 

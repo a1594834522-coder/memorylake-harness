@@ -273,3 +273,88 @@ async def test_status_report_and_close(tmp_path, data_dir, scripted) -> None:
     assert "tools offered: memory_search, memory_remember, memory_forget" in report
     assert "sk-SECRET123" not in report  # the key itself never appears
     assert await m.close() is True
+
+
+# --------------------------------------------------------- conversation sync
+
+SYNCING = {**READY, "project": "proj-1", "sync_conversations": True, "sync_interval": 2}
+
+
+def _script_sync(scripted) -> None:
+    from tests.test_sync import script_identities
+    script_identities(scripted)
+
+
+async def test_sync_off_by_default_interval_zero(tmp_path, data_dir, scripted) -> None:
+    m = make_manager(tmp_path, scripted, READY)
+    await m.start()
+    assert m.get_auto_memory_interval() == 0 and m.sync is None and not m.syncing
+    assert await m.auto_memory([Msg(name="u", role="user", content=[TextBlock(type="text", text="hi")], id="m1")], session_id="s") == ""
+    assert "conversation sync: off" in await m.status_report()
+    assert "Conversation sync" not in m.get_memory_prompt()
+
+
+async def test_sync_on_without_project_is_inactive_and_says_so(tmp_path, data_dir, scripted) -> None:
+    m = make_manager(tmp_path, scripted, {**READY, "sync_conversations": True})
+    await m.start()
+    assert m.get_auto_memory_interval() == 0 and m.sync is None
+    assert m.effective.sync_blocker == "no project configured"
+    assert "ON but inactive — no project configured" in await m.status_report()
+
+
+async def test_sync_on_appends_turn_text(tmp_path, data_dir, scripted) -> None:
+    _script_sync(scripted)
+    m = make_manager(tmp_path, scripted, SYNCING)
+    await m.start()
+    assert m.syncing and m.get_auto_memory_interval() == 2
+    from memorylake_backend.protocol import SYNC_BLOCK
+    assert SYNC_BLOCK in m.get_memory_prompt()
+
+    summary = await m.auto_memory(
+        [Msg(name="u", role="user", content=[TextBlock(type="text", text="remember I like tea")], id="m1"),
+         Msg(name="a", role="assistant", content=[TextBlock(type="text", text="Noted.")], id="m2")],
+        trigger="periodic", session_id="sess-9",
+    )
+    assert summary == "conversation sync: 2 appended, 0 skipped"
+    appends = [c for c in scripted.calls if c[1:4] == ["conversation", "message", "append"]]
+    assert [c[c.index("--actor") + 1] for c in appends] == ["act-1", "act-bot"]
+    assert "trigger=periodic" in appends[0]
+    state_root = plugin_state_dir(tmp_path / "host") / "sync" / "agent-1"
+    assert (state_root / "sessions" / "sess-9.json").exists()
+    report = await m.status_report()
+    assert "conversation sync: on (every 2 turn(s), project proj-1" in report
+    assert "last batch: conversation sync: 2 appended" in report and "[conv-1]" in report
+
+
+async def test_sync_strips_the_synthetic_recall_exchange(tmp_path, data_dir, scripted) -> None:
+    _script_sync(scripted)
+    m = make_manager(tmp_path, scripted, SYNCING)
+    await m.start()
+    from qwenpaw.constant import AUTO_MEMORY_SEARCH_BLOCK_IDS_KEY
+    real = TextBlock(type="text", text="Real answer.")
+    synthetic = TextBlock(type="text", text="I should search long-term memory before answering.")
+    msg = Msg(name="a", role="assistant", content=[synthetic, real], id="m2",
+              metadata={AUTO_MEMORY_SEARCH_BLOCK_IDS_KEY: [synthetic.id]})
+    await m.auto_memory([msg], session_id="sess-1")
+    appends = [c for c in scripted.calls if c[1:4] == ["conversation", "message", "append"]]
+    assert appends[0][appends[0].index("--text") + 1] == "Real answer."
+
+
+async def test_sync_without_session_id_is_stated(tmp_path, data_dir, scripted) -> None:
+    _script_sync(scripted)
+    m = make_manager(tmp_path, scripted, SYNCING)
+    await m.start()
+    assert await m.auto_memory([Msg(name="u", role="user", content=[TextBlock(type="text", text="x")], id="m1")]) == "conversation sync skipped: no session id"
+    assert scripted.argv_for("conversation") == []
+
+
+async def test_sync_failure_updates_status_not_silent(tmp_path, data_dir, scripted) -> None:
+    _script_sync(scripted)
+    scripted.on("actor get", exit_code=1, stderr="Error: unauthorized")
+    scripted.on("actor create", exit_code=1, stderr="Error: unauthorized")
+    m = make_manager(tmp_path, scripted, SYNCING)
+    await m.start()
+    summary = await m.auto_memory([Msg(name="u", role="user", content=[TextBlock(type="text", text="x")], id="m1")], session_id="s")
+    assert summary.startswith("conversation sync FAILED (not-logged-in")
+    assert m.status.state == "not-logged-in"
+    assert "last batch: conversation sync FAILED" in await m.status_report()

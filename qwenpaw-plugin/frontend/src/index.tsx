@@ -63,6 +63,18 @@ const messages = {
     errCli: "The memorylake CLI is not available and could not be installed",
     errAuth: "Not authenticated. Check the API key and deployment",
     errOther: "Could not reach Memory Lake",
+    sync: "Conversation sync",
+    syncHelp:
+      "Record this Agent's conversations in Memory Lake so it can distill memories from them. Only the text of what the user says and what the Agent replies is sent, in batches after every N user turns. Tool calls, tool results, and reasoning never leave this machine.",
+    syncSwitch: "Record conversations to Memory Lake",
+    project: "Project",
+    projectHelp: "The Memory Lake project the conversation is filed under. Required for sync.",
+    noProjects: "This workspace has no projects yet. Create one in the Memory Lake console.",
+    syncInterval: "Send every N user turns",
+    syncIntervalHelp: "1 sends after every reply. Batches are also sent when the context is compacted and on /new.",
+    syncNeedsActor: "Sync needs an actor: the user's messages are attributed to it.",
+    syncNeedsProject: "Sync needs a project.",
+    maxMessageChars: "Max characters per recorded message",
     advanced: "Recall and runtime",
     autoRecall: "Automatic recall",
     autoRecallHelp: "Search memory with the user's message before every reply.",
@@ -101,6 +113,18 @@ const messages = {
     errCli: "memorylake CLI 不可用且自动安装失败",
     errAuth: "认证失败，请检查 API key 与部署站点",
     errOther: "无法连接 Memory Lake",
+    sync: "对话同步",
+    syncHelp:
+      "把该 Agent 的对话记录到 Memory Lake，由它在后台提炼记忆。只发送用户说的话和 Agent 回复的文字，每 N 轮用户对话批量发送一次。工具调用、工具结果和推理过程不会离开本机。",
+    syncSwitch: "将对话记录到 Memory Lake",
+    project: "Project",
+    projectHelp: "对话归档到的 Memory Lake project。开启同步时必填。",
+    noProjects: "该 workspace 还没有 project，请先到 Memory Lake 控制台创建。",
+    syncInterval: "每 N 轮用户对话发送一次",
+    syncIntervalHelp: "填 1 表示每次回复后就发送。上下文压缩和 /new 时也会发送。",
+    syncNeedsActor: "同步需要 actor：用户的消息会归属于它。",
+    syncNeedsProject: "同步需要选择 project。",
+    maxMessageChars: "每条记录消息的最大字数",
     advanced: "召回与运行参数",
     autoRecall: "自动召回",
     autoRecallHelp: "每次回复前用用户消息自动检索一次记忆。",
@@ -140,6 +164,7 @@ interface DiscoverResponse {
   login?: string;
   workspaces: { id: string; name: string }[];
   actors: { id: string; display_name: string; status: string }[];
+  projects?: { id: string; name: string }[];
   me?: string;
 }
 
@@ -168,6 +193,9 @@ function MemoryLakeConfigCard() {
   const baseUrl: string = Form.useWatch([...root, "base_url"], form) ?? "";
   const workspace: string = Form.useWatch([...root, "workspace"], form) ?? "";
   const installCli: boolean = Form.useWatch([...root, "install_cli"], form) ?? true;
+  const actor: string = Form.useWatch([...root, "actor"], form) ?? "";
+  const project: string = Form.useWatch([...root, "project"], form) ?? "";
+  const syncOn: boolean = Form.useWatch([...root, "sync_conversations"], form) ?? false;
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DiscoverResponse | null>(null);
@@ -251,6 +279,19 @@ function MemoryLakeConfigCard() {
     [result, text],
   );
 
+  const projectOptions = useMemo(
+    () => (result?.ok ? result.projects ?? [] : []).map((p) => ({
+      value: p.id,
+      label: (
+        <Space size={6}>
+          <span>{p.name || p.id}</span>
+          {p.name ? <Typography.Text type="secondary" style={{ fontSize: 12 }}>{p.id}</Typography.Text> : null}
+        </Space>
+      ),
+    })),
+    [result],
+  );
+
   const loginNote = result?.ok
     ? result.login === "request key" ? text.viaRequestKey
       : result.login === "saved key" ? text.viaSavedKey
@@ -311,6 +352,43 @@ function MemoryLakeConfigCard() {
         />
       </Form.Item>
 
+      <Card type="inner" title={text.sync} style={{ marginBottom: 16 }}>
+        <Typography.Paragraph type="secondary" style={{ marginBottom: 12 }}>{text.syncHelp}</Typography.Paragraph>
+        <Form.Item
+          name={[...root, "sync_conversations"]}
+          label={text.syncSwitch}
+          valuePropName="checked"
+          initialValue={false}
+        >
+          <Switch />
+        </Form.Item>
+        {syncOn && !actor ? (
+          <Alert type="warning" showIcon message={text.syncNeedsActor} style={{ marginBottom: 12 }} />
+        ) : null}
+        {syncOn && !project ? (
+          <Alert type="warning" showIcon message={text.syncNeedsProject} style={{ marginBottom: 12 }} />
+        ) : null}
+        <Form.Item name={[...root, "project"]} label={text.project} extra={text.projectHelp}>
+          <AutoComplete
+            options={projectOptions}
+            allowClear
+            placeholder="proj-..."
+            filterOption
+            disabled={!syncOn}
+            notFoundContent={result?.ok && workspace ? text.noProjects : null}
+          />
+        </Form.Item>
+        <Form.Item
+          name={[...root, "sync_interval"]}
+          label={text.syncInterval}
+          extra={text.syncIntervalHelp}
+          initialValue={1}
+          rules={[{ type: "number", min: 1, max: 20 }]}
+        >
+          <InputNumber min={1} max={20} disabled={!syncOn} style={{ width: "100%" }} />
+        </Form.Item>
+      </Card>
+
       <Collapse
         items={[
           {
@@ -343,6 +421,14 @@ function MemoryLakeConfigCard() {
                   rules={[{ type: "number", min: 1, max: 20 }]}
                 >
                   <InputNumber min={1} max={20} style={{ width: "100%" }} />
+                </Form.Item>
+                <Form.Item
+                  name={[...root, "max_message_chars"]}
+                  label={text.maxMessageChars}
+                  initialValue={8000}
+                  rules={[{ type: "number", min: 500, max: 64000 }]}
+                >
+                  <InputNumber min={500} max={64000} step={500} style={{ width: "100%" }} />
                 </Form.Item>
                 <Form.Item
                   name={[...root, "install_cli"]}

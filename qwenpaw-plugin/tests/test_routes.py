@@ -27,6 +27,7 @@ def script_lists(scripted) -> None:
         {"id": "ws-1", "name": "Default Workspace"}, {"id": "ws-2", "name": "Team"},
     ]})
     scripted.on("actor me", stdout={"id": "actor-me"})
+    scripted.on("project list", stdout={"items": [{"id": "proj-1", "name": "Notes"}, {"id": "proj-2"}]})
     scripted.on("actor list", stdout={"items": [
         {"actor_id": "actor-me", "display_name": "jiawen", "status": "ACTIVE"},
         {"actor_id": "actor-old", "display_name": "gone", "status": "DELETED"},
@@ -41,6 +42,8 @@ async def test_request_key_uses_a_throwaway_home_and_cleans_it(tmp_path, scripte
     assert [w.id for w in result.workspaces] == ["ws-1", "ws-2"]
     assert result.me == "actor-me"
     assert [a.id for a in result.actors] == ["actor-me", "actor-old"]
+    assert [(p.id, p.name) for p in result.projects] == [("proj-1", "Notes"), ("proj-2", "")]
+    assert scripted.argv_for("project list")[0][-1] == "ws-2"
     assert scripted.argv_for("auth login")[0] == [str(FAKE_BINARY), "auth", "login", "--api-key", "sk-new", "--base-url", "https://cn"]
     assert scripted.argv_for("actor list")[0][-1] == "ws-2"
     homes = set(scripted.homes)

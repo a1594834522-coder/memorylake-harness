@@ -38,6 +38,11 @@ def cli_home_dir(host_working_dir: Path, agent_id: str) -> Path:
     return plugin_state_dir(host_working_dir) / "cli-home" / agent_id
 
 
+def sync_state_dir(host_working_dir: Path, agent_id: str) -> Path:
+    """Conversation-sync bookkeeping for one Agent (see ``sync.SyncState``)."""
+    return plugin_state_dir(host_working_dir) / "sync" / agent_id
+
+
 async def ensure_binary(
     host_working_dir: Path,
     *,

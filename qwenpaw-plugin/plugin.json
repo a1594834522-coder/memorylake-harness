@@ -1,7 +1,7 @@
 {
   "id": "memory-memorylake",
   "name": "Memory Lake",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Memory Lake as the long-term memory backend: cross-project, cross-machine, cross-client memory shared with Claude Code, Codex, dsh, and opencode.",
   "author": "Memory Lake",
   "type": "memory",

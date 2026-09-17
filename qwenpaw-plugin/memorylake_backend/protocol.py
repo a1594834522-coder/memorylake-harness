@@ -108,6 +108,19 @@ NO_ACTOR_BLOCK = (
     "do not claim to have saved it."
 )
 
+SYNC_BLOCK = """### Conversation sync
+
+This Agent's conversations with the user are recorded to Memory Lake
+automatically: the text of what the user says and what you reply is appended
+to a per-session conversation, and Memory Lake distills memories from it in
+the background. Tool calls, tool results, and your reasoning are not recorded.
+
+Because of this, do not use `memory_remember` to paraphrase the conversation —
+it would be stored twice. Reserve it for a fact the user explicitly asks you to
+remember, or one you want stored in exactly the words you choose. Everything
+else the user tells you in plain text will reach memory on its own, with a
+delay of minutes rather than seconds."""
+
 UNCONFIGURED_BLOCK = (
     "## Memory Lake\n\n"
     "Memory Lake is selected as this Agent's memory backend but not configured, "
@@ -153,15 +166,17 @@ def render_status(status: BackendStatus) -> str:
     )
 
 
-def build_memory_prompt(status: BackendStatus, can_write: bool) -> str:
+def build_memory_prompt(status: BackendStatus, can_write: bool, syncing: bool = False) -> str:
     """The text `get_memory_prompt()` returns for a configured Agent.
 
-    Deterministic: the same status yields byte-identical text."""
+    Deterministic: the same inputs yield byte-identical text."""
     sections = [PROTOCOL_READ]
     # Only describe writing when writing is possible; teaching the model to
     # reach for a tool it has not been given makes it invent one.
     if can_write:
         sections.append(PROTOCOL_WRITE)
+    if syncing:
+        sections.append(SYNC_BLOCK)
     sections.append(render_status(status))
     if not can_write:
         sections.append(NO_ACTOR_BLOCK)

@@ -46,3 +46,12 @@ def test_status_from_failure_mapping() -> None:
 def test_unconfigured_block_points_at_status_command() -> None:
     assert "/memorylake-status" in UNCONFIGURED_BLOCK
     assert "Do not claim to remember" in UNCONFIGURED_BLOCK
+
+
+def test_sync_block_only_when_syncing() -> None:
+    from memorylake_backend.protocol import SYNC_BLOCK
+    connected = BackendStatus("connected", projects=1)
+    assert SYNC_BLOCK not in build_memory_prompt(connected, can_write=True)
+    text = build_memory_prompt(connected, can_write=True, syncing=True)
+    assert SYNC_BLOCK in text and text.index(PROTOCOL_WRITE) < text.index(SYNC_BLOCK) < text.index("### Status")
+    assert "Tool calls, tool results, and your reasoning are not recorded" in SYNC_BLOCK

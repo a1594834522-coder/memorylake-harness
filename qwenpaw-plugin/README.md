@@ -77,9 +77,19 @@ accordingly.
   ordered by relevance, scores never shown; an empty result carries a hint
   rather than a bare empty list.
 - **`memory_remember`** and **`memory_forget`**, offered only when an actor
-  is configured. Facts are written when the model calls the tool, and only
-  then: **nothing is captured automatically**, no transcript is uploaded.
-  This is the same position as every other Memory Lake harness.
+  is configured. Facts are written when the model calls the tool.
+- **Conversation sync, off by default.** When switched on in the form, the
+  text of what the user says and what the Agent replies is appended to one
+  Memory Lake conversation per chat session, and Memory Lake distills
+  memories from it in the background. It is sent in batches, every N user
+  turns (N is configurable, default 1), and also when QwenPaw compacts the
+  context or the user runs `/new`. **Only text is sent**: tool calls, tool
+  results, reasoning, images, and files never leave the machine. The user's
+  messages are attributed to the configured actor; the Agent's to an
+  `ASSISTANT` actor the plugin creates once per Agent. Every message is sent
+  with its QwenPaw id as the idempotency key, so retries and QwenPaw's own
+  replays never duplicate anything. A batch that fails is kept on disk and
+  retried with the next one; `/memorylake-status` shows the last outcome.
 - **Honest failure.** When the CLI is missing, not logged in, or the backend
   is unreachable, the system prompt says recall is UNAVAILABLE and a failing
   tool call says so too, so the model cannot mistake an outage for "you never
@@ -102,6 +112,10 @@ are currently offered. It is the first thing to run when memory seems off.
 | `base_url` | `""` | passed to that login; empty keeps the CLI default |
 | `workspace` | `""` | overrides the shared config |
 | `actor` | `""` | overrides the shared config; required for writes |
+| `sync_conversations` | `false` | record conversation text to Memory Lake (needs `actor` and `project`) |
+| `project` | `""` | the Memory Lake project the conversation is filed under |
+| `sync_interval` | `1` | send every N user turns (1–20) |
+| `max_message_chars` | `8000` | longer messages are clipped before sending (500–64000) |
 | `auto_recall` | `true` | recall before every reply |
 | `auto_recall_top_k` | `3` | results per automatic recall (1–10) |
 | `top_k` | `5` | default for `memory_search` (1–20) |
