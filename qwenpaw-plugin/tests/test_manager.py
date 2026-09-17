@@ -384,3 +384,17 @@ async def test_auto_recall_query_is_not_cut_at_50_chars(tmp_path, data_dir, scri
     assert len(long_question) > 50
     result = await m.auto_memory_search(Msg(name="u", role="user", content=[TextBlock(type="text", text=long_question)]))
     assert result is not None and result["query"] == long_question
+
+
+async def test_search_corrects_borrowed_argument_shapes(tmp_path, data_dir, scripted) -> None:
+    m = make_manager(tmp_path, scripted, READY)
+    await m.start()
+    scripted.on("search", stdout={"facts": [{"id": "f1", "fact": "Prefers vim"}]})
+    chunk = await m.memory_search(query="editor", op="search", k=15, all_agents=True)
+    assert chunk.state == ToolResultState.SUCCESS
+    assert "Prefers vim" in text_of(chunk) and "all_agents, k, op ignored" in text_of(chunk)
+    assert scripted.argv_for("search")[0][-1] == "editor"
+    chunk = await m.memory_search(query="", op="search")
+    assert chunk.state == ToolResultState.ERROR and "not `recall_history`" in text_of(chunk)
+    clean = await m.memory_search(query="editor")
+    assert "ignored" not in text_of(clean)

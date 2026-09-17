@@ -303,10 +303,14 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
             max_results (`int`, optional):
                 How many results to return. Defaults to 5, at most 20.
         """
-        del kwargs
-        query = query.strip()
+        stray = sorted(k for k in kwargs if k != "tool_call_id")
+        query = (query or "").strip()
         if not query:
-            return _chunk("Error: query cannot be empty", ok=False)
+            return _chunk(
+                "Error: memory_search needs `query` (the text to search for). It takes "
+                "only `query` and `max_results`; it is not `recall_history`.",
+                ok=False,
+            )
         top_k = min(max(1, int(max_results or self.effective.top_k)), MAX_TOP_K)
         if not self.usable:
             return _chunk(failure_text(self._unusable_failure(), "search MemoryLake"), ok=False)
@@ -328,7 +332,15 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
                 ok=False,
             )
         self._mark_connected()
-        return _chunk(render_search_result(normalize_search_payload(payload)))
+        text = render_search_result(normalize_search_payload(payload))
+        if stray:
+            # The model borrowed another tool's argument shape; the search
+            # still ran, so answer it — and correct the shape in passing.
+            text += (
+                f"\n\n(memory_search takes only `query` and `max_results`; "
+                f"{', '.join(stray)} ignored.)"
+            )
+        return _chunk(text)
 
     async def memory_remember(self, fact: str, **kwargs: Any) -> ToolChunk:
         """Store one durable fact in the user's long-term memory, so it is

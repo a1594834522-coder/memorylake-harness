@@ -33,6 +33,14 @@ memories written by other tools — Claude Code, Codex, opencode, dsh — that
 QwenPaw cannot otherwise see. Anything the user told you before this session,
 or told a different assistant, is here or nowhere.
 
+### The tool
+
+`memory_search(query, max_results=5)` — two arguments, nothing else. It is
+not `recall_history`: that tool pages through this session's own archived
+context, while `memory_search` reaches MemoryLake — what the user said in
+other sessions, other tools, and on other machines. Never pass `op`, `k`,
+or `all_agents` to `memory_search`, and never call it without a `query`.
+
 ### Automatic recall, and what it misses
 
 Before you answer, the user's latest message is run through `memory_search`
@@ -60,24 +68,37 @@ trust; one extra tool call is cheap.
 - you are about to write "you never mentioned that", or to guess at a
   preference, or to ask for information a long-term user would expect you to
   have
+- before you write code, a document, or a message in the user's voice for
+  the first time in a session: one search for their conventions (`user's
+  code comment language`, `user's document format preferences`) costs less
+  than redoing the work
 
 ### How to write a query
 
 `memory_search` matches stored statements, so **write the query the way the
 memory would be written**, not the way the question was asked:
 
+- **the user's language first**: memories are stored in the language they
+  were spoken in; a query in another language is a second try, not the first
 - **statement-style keywords, not questions**: `user's preferred editor`
   finds more than `what editor do you like?`
 - **resolve pronouns to names**: `Alice's review deadline`, not `her deadline`
 - **absolute dates**: `2026-07 migration`, not `last month's migration`
-- **one intent per query**: "my flight and the hotel" is two searches
+- **one intent per query**: "my flight and the hotel" is two searches, and
+  a message that asks two things gets two searches before you answer either
+  — never report "no record" for a part you have not searched
 - **name the entity first**: `Acme API auth decision`, not `the decision we
   made about how to do auth on that API project`
 
 For a vague or broad question, run two or three **differently phrased**
 searches — entity, then event, then time period — rather than one long
 query. Stop when a hit answers the question or when two reformulations came
-back empty; then say plainly that nothing is stored about it.
+back empty. An empty search means **nothing is stored**, not that the user
+never said it — they may have said it to a tool that does not record, or
+before memory was set up. **You know what is stored; you do not know what
+the user has or has not said.** So: "I have no record of your blood type",
+never "you never told me" or "you haven't mentioned it before", in any
+language.
 
 ### How to read results
 

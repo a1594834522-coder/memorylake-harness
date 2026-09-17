@@ -561,6 +561,43 @@ Code.
 
 ## 9. Status
 
+**Search-playbook evaluation (2026-09-17):** the playbook prompt (D5) was
+iterated against a running QwenPaw (Claude via the Console, a throwaway
+Agent `ml-eval`, 8 seeded facts, 13 questions: direct, rephrased, pronoun
+follow-up, relative date, two topics in one message, decision rationale,
+short follow-up, a fact never stored, a "did I tell you" trap, an implicit
+preference before writing code). Findings that changed the code:
+
+- With automatic recall on, the model answered 12/13 without ever calling
+  `memory_search`; recall alone covers small workspaces. The prompt matters
+  when recall misses or is off, so the playbook was tuned with recall off.
+- With recall off (v1), the model searched proactively but wrote English
+  queries for Chinese memories, borrowed `recall_history`'s argument shape
+  (`op`, `k`, `all_agents`) for `memory_search`, and sometimes emitted a
+  parallel call with empty arguments. v2/v3 of the prompt name the exact
+  signature and say "the user's language first"; `memory_search` now runs
+  the query anyway when stray arguments arrive and appends a one-line
+  correction to the result, and an empty call gets an error that names the
+  right shape. Empty calls still appear as a second parallel tool call and
+  are a model-side artifact we only make cheap.
+- A two-topic question was sometimes answered after searching one topic.
+  The playbook now says a message asking two things is two searches, and
+  "no record" may only be reported for a part that was searched. Both
+  topics were searched in every run afterwards.
+- On a fact never stored, the model tended to say "you never told me". The
+  rule "you know what is stored, not what the user said" is in the prompt
+  and repeated in the empty-result text the tool returns, which is the
+  moment the model needs it. It moved the phrasing in about a third of
+  runs; the rest still assert the user never mentioned it. Known limitation.
+- The implicit-preference case (English code comments) never triggered a
+  search before writing code, with or without the bullet asking for it.
+  The bullet stays; recall-on covers it when the preference is stored.
+
+Final: 12/13 with recall on, 12/13 with recall off (v3), the miss being the
+phrasing above. The evaluation script lives outside the repo (it needs a
+live QwenPaw and an API key) and is described in `qwenpaw-plugin-design` in
+the maintainer's notes.
+
 **0.2.0 (2026-09-17):** conversation sync (D4 revised) implemented in
 `memorylake_backend/sync.py`, wired through `auto_memory` /
 `get_auto_memory_interval`, with the Console form's sync section (switch,
