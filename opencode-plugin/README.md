@@ -1,6 +1,6 @@
-# Memory Lake for opencode
+# MemoryLake for opencode
 
-Long-term memory for [opencode](https://opencode.ai), backed by Memory Lake via
+Long-term memory for [opencode](https://opencode.ai), backed by MemoryLake via
 the `memorylake` CLI.
 
 opencode has no memory of its own. Its only ambient instructions are static

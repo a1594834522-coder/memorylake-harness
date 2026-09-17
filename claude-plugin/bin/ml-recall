@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ml-recall — search Memory Lake and print a context-budget-friendly digest.
+# ml-recall — search MemoryLake and print a context-budget-friendly digest.
 #
 # A thin wrapper over `memorylake search`. The wrapping exists for one reason:
 # the raw CLI prints the full API payload as pretty JSON, and a single search
@@ -33,7 +33,7 @@ usage() {
   cat >&2 <<EOF
 usage: $PROG <query> [--top-k N]
 
-Searches Memory Lake for memories written from any project, machine, or client.
+Searches MemoryLake for memories written from any project, machine, or client.
 Write the query as statement-style keywords with pronouns resolved and relative
 dates made absolute.
 EOF
@@ -44,7 +44,7 @@ EOF
 # the user they never mentioned something they did.
 fail() {
   printf '%s: %s\n' "$1" "$2" >&2
-  printf 'Memory Lake recall is UNAVAILABLE for this call — do not read this as "no relevant memories". Tell the user the memory backend could not be reached.\n' >&2
+  printf 'MemoryLake recall is UNAVAILABLE for this call — do not read this as "no relevant memories". Tell the user the memory backend could not be reached.\n' >&2
   exit 1
 }
 
@@ -109,7 +109,7 @@ printf '%s' "$raw" | jq -r --arg query "$QUERY" '
   ( .facts     // [] | sort_by(-(.score // 0)) ) as $facts
   | ( .documents // [] ) as $docs
   | if ($facts | length) == 0 and ($docs | length) == 0 then
-      "No Memory Lake matches for: \($query)\n\nRetry ONCE with different wording — entity names, synonyms, statement-style keywords. If still nothing, tell the user honestly; do not invent an answer."
+      "No MemoryLake matches for: \($query)\n\nRetry ONCE with different wording — entity names, synonyms, statement-style keywords. If still nothing, tell the user honestly; do not invent an answer."
     else
       ( if ($facts | length) > 0 then
           "FACTS (\($facts | length), most relevant first)\n"

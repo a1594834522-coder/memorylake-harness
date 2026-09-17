@@ -1,15 +1,15 @@
 ---
 name: memorylake
-description: Search the user's cross-device long-term memory in Memory Lake. Use when the user refers to something they told an assistant before, asks what you know about them or their preferences, mentions a past decision, project, or document that is not in your session memory, or when your built-in memory has nothing and the answer plausibly exists elsewhere. Covers how to phrase recall queries and read results.
+description: Search the user's cross-device long-term memory in MemoryLake. Use when the user refers to something they told an assistant before, asks what you know about them or their preferences, mentions a past decision, project, or document that is not in your session memory, or when your built-in memory has nothing and the answer plausibly exists elsewhere. Covers how to phrase recall queries and read results.
 ---
 
-# Memory Lake
+# MemoryLake
 
-Memory Lake is the user's long-term memory **across devices, projects, and
+MemoryLake is the user's long-term memory **across devices, projects, and
 clients** — it holds memories written from the user's other machines and other
 assistants (Claude Code, mobile and web clients), plus documents they have
 stored. Your built-in Codex memory covers only what happened in your own
-sessions on this machine; Memory Lake is where everything else lives.
+sessions on this machine; MemoryLake is where everything else lives.
 
 ## When to reach for it
 
@@ -20,7 +20,7 @@ sessions on this machine; Memory Lake is where everything else lives.
 - Your built-in memory came up empty and the answer plausibly exists somewhere
   else
 
-Built-in memory stays the first stop — it is already in context. Memory Lake
+Built-in memory stays the first stop — it is already in context. MemoryLake
 is the second stop, for what your memory structurally cannot hold.
 
 ## Searching
@@ -68,12 +68,12 @@ contradicting the user about their own history.
 
 ## Writing memory
 
-Nothing to do: your session summaries are synced to Memory Lake automatically
+Nothing to do: your session summaries are synced to MemoryLake automatically
 in the background after each turn, so they become recallable from the user's
 other devices and clients. Each summary is routed (by the `cwd` in its
-metadata header) to the same per-repo Memory Lake project the Claude Code
+metadata header) to the same per-repo MemoryLake project the Claude Code
 harness writes to, so one repo's memories live together regardless of which
-assistant produced them. There is no separate "save to Memory Lake" step.
+assistant produced them. There is no separate "save to MemoryLake" step.
 
 ## If the user asks to exclude a project from syncing
 

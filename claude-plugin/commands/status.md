@@ -1,5 +1,5 @@
 ---
-description: Diagnose the Memory Lake plugin setup — CLI, login, config, connectivity
+description: Diagnose the MemoryLake plugin setup — CLI, login, config, connectivity
 disable-model-invocation: true
 allowed-tools: Bash, Read
 ---
@@ -28,7 +28,7 @@ command -v jq
 Missing → the plugin is inert and reports it: the session-start line says
 recall is unavailable, each memory write reports that it was saved locally but
 not synced, and `ml-recall` refuses to run. Nothing is lost locally; nothing
-reaches Memory Lake either. On macOS: `brew install jq`.
+reaches MemoryLake either. On macOS: `brew install jq`.
 
 ## 3. Logged in
 

@@ -3,7 +3,7 @@
 #
 # Every hook sources this and then calls ml_load_config. The load is written to
 # bail out as early as possible: these scripts run on the Read/Write path of
-# every tool call, so the cost of a session with no Memory Lake configured must
+# every tool call, so the cost of a session with no MemoryLake configured must
 # be one stat() and an exit.
 
 set -uo pipefail
@@ -431,8 +431,8 @@ ml_state_dir() {
 ml_exit_without_jq() {
   local event="${1:-}" marker now mtime
 
-  # Only speak up for someone who actually configured Memory Lake. "A project
-  # that does not use Memory Lake sees no trace of this plugin" outranks the
+  # Only speak up for someone who actually configured MemoryLake. "A project
+  # that does not use MemoryLake sees no trace of this plugin" outranks the
   # warning: telling an unconfigured user to install jq would be noise about a
   # feature they never turned on. ml_load_config reads frontmatter with awk, so
   # it still works without the jq we are missing.
@@ -440,7 +440,7 @@ ml_exit_without_jq() {
 
   if [ "$event" = "SessionStart" ]; then
     # Fires once per session by nature — no throttle needed.
-    printf '%s\n' '{"systemMessage":"[Memory Lake] jq is not installed, so the plugin is inert: memories are NOT syncing and recall is unavailable. Install jq (brew install jq / apt-get install jq), then start a new session.","hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Memory Lake is installed but inoperative this session: its jq dependency is missing. Memory recall is UNAVAILABLE — if a search returns nothing, say the memory backend could not be reached rather than concluding the memory does not exist."}}'
+    printf '%s\n' '{"systemMessage":"[MemoryLake] jq is not installed, so the plugin is inert: memories are NOT syncing and recall is unavailable. Install jq (brew install jq / apt-get install jq), then start a new session.","hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"MemoryLake is installed but inoperative this session: its jq dependency is missing. Memory recall is UNAVAILABLE — if a search returns nothing, say the memory backend could not be reached rather than concluding the memory does not exist."}}'
     exit 0
   fi
 
@@ -456,6 +456,6 @@ ml_exit_without_jq() {
     [ $((now - mtime)) -lt 14400 ] && exit 0
   fi
   mkdir -p "$(ml_state_dir)" 2>/dev/null && : >"$marker" 2>/dev/null
-  printf '%s\n' '{"systemMessage":"[Memory Lake] jq is not installed, so memories are NOT being synced to Memory Lake. Local memory files are intact. Install jq (brew install jq / apt-get install jq) to enable syncing."}'
+  printf '%s\n' '{"systemMessage":"[MemoryLake] jq is not installed, so memories are NOT being synced to MemoryLake. Local memory files are intact. Install jq (brew install jq / apt-get install jq) to enable syncing."}'
   exit 0
 }

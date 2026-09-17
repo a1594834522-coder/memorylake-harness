@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop — sync changed Codex memory summaries up to Memory Lake, in the
+# Stop — sync changed Codex memory summaries up to MemoryLake, in the
 # background.
 #
 # Codex memories are not written by the model through tool calls: an engine
@@ -341,7 +341,7 @@ fail_marker="$sync_root/last-failure.txt"
 if [ -f "$fail_marker" ]; then
   reason=$(head -c 300 "$fail_marker" 2>/dev/null)
   rm -f "$fail_marker" 2>/dev/null
-  jq -n --arg msg "[Memory Lake] the previous background memory sync failed ($reason). Local memories are intact; this turn's sync retries automatically." \
+  jq -n --arg msg "[MemoryLake] the previous background memory sync failed ($reason). Local memories are intact; this turn's sync retries automatically." \
     '{systemMessage: $msg}'
 fi
 

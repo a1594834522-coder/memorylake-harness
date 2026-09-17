@@ -32,7 +32,7 @@ export interface ToolDeps {
  * mentioned the thing — a confident false denial, which is worse than an
  * admitted outage.
  * @param failure - the classified failure.
- * @param action - what was being attempted, e.g. "search Memory Lake".
+ * @param action - what was being attempted, e.g. "search MemoryLake".
  * @returns the text to return as the tool result.
  */
 export function failureText(failure: CliFailure, action: string): string {
@@ -42,7 +42,7 @@ export function failureText(failure: CliFailure, action: string): string {
         + 'Memory is UNAVAILABLE this session — do not read this as "no relevant '
         + 'memories". Tell the user the memory backend could not be reached.'
     case 'not-logged-in':
-      return `Could not ${action}: Memory Lake is not authenticated. Ask the user `
+      return `Could not ${action}: MemoryLake is not authenticated. Ask the user `
         + 'to run `memorylake auth login`. Do not read this as "no relevant '
         + 'memories" — the backend was never consulted.'
     case 'unreachable':

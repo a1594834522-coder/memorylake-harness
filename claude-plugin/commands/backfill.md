@@ -1,5 +1,5 @@
 ---
-description: Upload pre-existing local memories from all projects to Memory Lake (one-time, opt-in)
+description: Upload pre-existing local memories from all projects to MemoryLake (one-time, opt-in)
 disable-model-invocation: true
 allowed-tools: Bash, Read
 ---
@@ -23,7 +23,7 @@ stay local; that is expected, not an error).
 ## 2. Confirm, then run
 
 This uploads the accumulated contents of local memory — potentially months of
-notes about what the user worked on — to their Memory Lake workspace. Get an
+notes about what the user worked on — to their MemoryLake workspace. Get an
 explicit yes on the dry-run preview before running for real:
 
 ```bash

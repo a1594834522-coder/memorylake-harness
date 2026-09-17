@@ -1,6 +1,6 @@
 {
   "name": "memorylake",
-  "description": "Memory Lake integrations for coding agents",
+  "description": "MemoryLake integrations for coding agents",
   "owner": {
     "name": "MemoryLake"
   },
@@ -8,7 +8,7 @@
     {
       "name": "memorylake",
       "source": "./claude-plugin",
-      "description": "Cross-device long-term memory for Claude Code, backed by Memory Lake"
+      "description": "Cross-device long-term memory for Claude Code, backed by MemoryLake"
     }
   ]
 }

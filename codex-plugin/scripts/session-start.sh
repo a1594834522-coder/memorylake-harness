@@ -54,7 +54,7 @@ fi
 input=$(cat 2>/dev/null || printf '{}')
 cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
 
-# Not configured: stay silent. A machine that does not use Memory Lake should
+# Not configured: stay silent. A machine that does not use MemoryLake should
 # see no trace of this plugin.
 ml_load_config "${cwd:-$PWD}" || exit 0
 ml_flag_enabled "${ML_STATUS_LINE:-}" || exit 0
@@ -62,7 +62,7 @@ ml_flag_enabled "${ML_STATUS_LINE:-}" || exit 0
 RECALL="$shared_bin/ml-recall"
 
 CLI=$(ml_cli)
-[ -n "$CLI" ] || emit "Memory Lake: the 'memorylake' CLI is not installed, so cross-device memory recall is unavailable this session. Do not treat missing recall results as 'no such memory'."
+[ -n "$CLI" ] || emit "MemoryLake: the 'memorylake' CLI is not installed, so cross-device memory recall is unavailable this session. Do not treat missing recall results as 'no such memory'."
 
 CACHE_DIR="$(ml_data_dir)/status"
 CACHE_FILE="$CACHE_DIR/${ML_WORKSPACE}.txt"
@@ -89,9 +89,9 @@ fi
 if [ -z "$projects" ]; then
   projects=$("$CLI" project list --workspace "$ML_WORKSPACE" 2>/dev/null | jq -r '(.items // []) | length' 2>/dev/null)
   if [ -z "$projects" ]; then
-    emit "Memory Lake: workspace ${ML_WORKSPACE} is unreachable. Cross-device memory recall is UNAVAILABLE this session — if a recall returns nothing, say the backend could not be reached rather than concluding the memory does not exist."
+    emit "MemoryLake: workspace ${ML_WORKSPACE} is unreachable. Cross-device memory recall is UNAVAILABLE this session — if a recall returns nothing, say the backend could not be reached rather than concluding the memory does not exist."
   fi
   mkdir -p "$CACHE_DIR" 2>/dev/null && printf '%s' "$projects" >"$CACHE_FILE" 2>/dev/null
 fi
 
-emit "Memory Lake: connected · workspace ${ML_WORKSPACE} · ${projects} project(s). Memories from the user's other devices, projects, and clients (including Claude Code) are searchable with \`${RECALL} \"<query>\"\`."
+emit "MemoryLake: connected · workspace ${ML_WORKSPACE} · ${projects} project(s). Memories from the user's other devices, projects, and clients (including Claude Code) are searchable with \`${RECALL} \"<query>\"\`."

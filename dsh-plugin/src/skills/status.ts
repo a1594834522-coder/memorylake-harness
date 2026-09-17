@@ -8,7 +8,7 @@
  * @module
  */
 
-/** Model-facing instructions for the Memory Lake health check. */
+/** Model-facing instructions for the MemoryLake health check. */
 export const STATUS_SKILL_CONTENT = `Run the checks below in order and report each one as pass or fail with the
 detail shown. Do not stop at the first failure — the user needs the whole
 picture. End with the single most useful next action.

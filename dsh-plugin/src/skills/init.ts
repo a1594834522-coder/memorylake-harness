@@ -11,8 +11,8 @@
  * @module
  */
 
-/** Model-facing instructions for the guided Memory Lake setup. */
-export const INIT_SKILL_CONTENT = `Walk the user from a bare plugin install to a working Memory Lake setup. Run
+/** Model-facing instructions for the guided MemoryLake setup. */
+export const INIT_SKILL_CONTENT = `Walk the user from a bare plugin install to a working MemoryLake setup. Run
 the stages in order; skip any stage that is already satisfied and say so.
 Never print, echo, or write the user's API key anywhere except the
 \`memorylake auth login\` command itself.
@@ -78,7 +78,7 @@ memorylake auth status
 \`\`\`
 
 If not logged in, ask the user for their API key (they can create one in the
-Memory Lake console). The service has two deployments with **separate
+MemoryLake console). The service has two deployments with **separate
 accounts**: the international one at memorylake.ai (the CLI's default) and
 the China one at memorylake.cn. Ask which console the user's account lives
 in; international accounts need no \`--base-url\`, China accounts log in with
@@ -147,7 +147,7 @@ status_line: true
 
 Before writing, tell the user what \`sync_on_write: true\` means here: the
 model may store facts it is told to remember (and other durable facts about
-the user's preferences and projects) in their Memory Lake workspace, from
+the user's preferences and projects) in their MemoryLake workspace, from
 any project on this machine. A project can opt out with a
 \`.claude/memorylake.local.md\` containing \`sync_on_write: false\` (keep it
 gitignored via \`.claude/*.local.md\`).

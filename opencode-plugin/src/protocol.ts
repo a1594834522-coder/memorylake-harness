@@ -26,9 +26,9 @@ export type BackendStatus
     | { state: 'not-logged-in' }
     | { state: 'unreachable' }
 
-const PROTOCOL_READ = `## Memory Lake
+const PROTOCOL_READ = `## MemoryLake
 
-Memory Lake is the user's long-term memory **across projects, machines, and
+MemoryLake is the user's long-term memory **across projects, machines, and
 clients**. opencode has no memory of its own, and it cannot see memories
 written by other tools — including Claude Code, whose memories live in a
 directory opencode never reads. Anything the user told you before this session,
@@ -121,20 +121,20 @@ already visible — and do not announce each write in prose.`
 export function renderStatus(status: BackendStatus): string {
   switch (status.state) {
     case 'connected':
-      return `### Status\n\nMemory Lake is connected (${String(status.projects)} project(s)). `
+      return `### Status\n\nMemoryLake is connected (${String(status.projects)} project(s)). `
         + 'Use the `memory_search` tool to recall, and `memory_remember` to store a '
         + 'durable fact the user would expect you to know next time.'
     case 'cli-missing':
-      return '### Status\n\nMemory Lake is configured but the `memorylake` CLI is not '
+      return '### Status\n\nMemoryLake is configured but the `memorylake` CLI is not '
         + 'installed, so recall is UNAVAILABLE this session. Do not treat the absence '
         + 'of memories as evidence that the user never told you something — say the '
         + 'memory backend could not be reached.'
     case 'not-logged-in':
-      return '### Status\n\nMemory Lake is configured but not authenticated, so recall '
+      return '### Status\n\nMemoryLake is configured but not authenticated, so recall '
         + 'is UNAVAILABLE this session. Tell the user to run `memorylake auth login`. '
         + 'Do not treat missing memories as "you never told me that".'
     case 'unreachable':
-      return '### Status\n\nMemory Lake is configured but unreachable, so recall is '
+      return '### Status\n\nMemoryLake is configured but unreachable, so recall is '
         + 'UNAVAILABLE this session. If you cannot find something, say the memory '
         + 'backend could not be reached — do not conclude the memory does not exist.'
   }
@@ -176,8 +176,8 @@ export function buildSystemBlock(status: BackendStatus, canWrite: boolean): stri
  * for discoverability, and only a user who actually asks pulls in the text.
  */
 export const SETUP_BLOCK
-  = '## Memory Lake\n\n'
-    + 'The Memory Lake plugin is installed but not configured, so this session has '
+  = '## MemoryLake\n\n'
+    + 'The MemoryLake plugin is installed but not configured, so this session has '
     + 'no long-term memory: nothing the user told you in earlier sessions, other '
     + 'projects, or other tools is available. Do not claim to remember anything '
     + 'across sessions, and do not offer to remember things for later.\n\n'

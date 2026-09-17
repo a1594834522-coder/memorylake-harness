@@ -65,7 +65,7 @@ describe('memorylake-tools plugin', () => {
     expect(names).toContain('memory_forget')
     const assembly = await ctx.systemPrompt.assemble()
     const section = assembly.sections.find(entry => entry.name === 'memorylake:memory')
-    expect(section?.text).toContain('## Memory Lake')
+    expect(section?.text).toContain('## MemoryLake')
     expect(section?.text).toContain('Statement-style keywords beat questions')
   })
 
@@ -260,7 +260,7 @@ describe('memorylake-tools plugin', () => {
       mkdirSync(join(tree.dataDir, 'status'), { recursive: true })
       writeFileSync(join(tree.dataDir, 'status', 'ws-test.txt'), '3')
       await boot()
-      expect(await statusText()).toBe('Memory Lake: connected · workspace ws-test · memory tools available.')
+      expect(await statusText()).toBe('MemoryLake: connected · workspace ws-test · memory tools available.')
     })
 
     it('reports UNAVAILABLE loudly when the workspace is unreachable', async () => {
@@ -269,7 +269,7 @@ describe('memorylake-tools plugin', () => {
       await boot()
       await vi.waitFor(async () => {
         const line = await statusText()
-        expect(line).toContain('Memory Lake workspace ws-test is unreachable')
+        expect(line).toContain('MemoryLake workspace ws-test is unreachable')
         expect(line).toContain('UNAVAILABLE')
         expect(line).toContain('rather than concluding the memory does not exist')
       })
@@ -280,7 +280,7 @@ describe('memorylake-tools plugin', () => {
       mkdirSync(join(tree.dataDir, 'status'), { recursive: true })
       writeFileSync(join(tree.dataDir, 'status', 'ws-test.txt'), '3')
       await boot()
-      expect(await statusText()).toContain('Memory Lake: connected')
+      expect(await statusText()).toContain('MemoryLake: connected')
       // Config gates are re-read live at every assembly — no TTL wait.
       tree.writeGlobalConfig(READY_CONFIG.replace('status_line: true', 'status_line: false'))
       expect(await statusText()).toBe('')
@@ -293,7 +293,7 @@ describe('memorylake-tools plugin', () => {
       tree.setScenario({ 'project list': { exitCode: 0, stdout: { items: [{ id: 'p-1' }] } } })
       await boot()
       await vi.waitFor(async () => {
-        expect(await statusText()).toContain('Memory Lake: connected')
+        expect(await statusText()).toContain('MemoryLake: connected')
       })
     })
   })

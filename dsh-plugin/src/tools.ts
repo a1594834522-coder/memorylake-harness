@@ -1,5 +1,5 @@
 /**
- * The model-facing face of Memory Lake for dsh: three tools, one static
+ * The model-facing face of MemoryLake for dsh: three tools, one static
  * prompt section, one dynamic status context, and two user-invocable skills.
  *
  * Function-form plugin with NAMED exports only. Adding a default export here
@@ -51,9 +51,9 @@ export const Config: Schema<Config> = Schema.object({
 })
 
 /** The static tool-guidance section (order 150 — the tool guidance band). */
-export const MEMORY_SECTION_TEXT = `## Memory Lake
+export const MEMORY_SECTION_TEXT = `## MemoryLake
 
-Memory Lake is this harness's persistent long-term memory. Facts stored there
+MemoryLake is this harness's persistent long-term memory. Facts stored there
 survive across sessions, projects, machines, and clients. Three tools manage
 it: \`memory_search\`, \`memory_remember\`, \`memory_forget\`.
 
@@ -96,19 +96,19 @@ the memory does not exist.`
 
 /** Text of the ready status line (connectivity only — never a memory digest). */
 export function readyStatusLine(workspace: string): string {
-  return `Memory Lake: connected · workspace ${workspace} · memory tools available.`
+  return `MemoryLake: connected · workspace ${workspace} · memory tools available.`
 }
 
 /** Text of the unreachable status line (the "failure is not emptiness" duty). */
 export function unreachableStatusLine(workspace: string): string {
-  return `Memory Lake workspace ${workspace} is unreachable. Memory recall is `
+  return `MemoryLake workspace ${workspace} is unreachable. Memory recall is `
     + 'UNAVAILABLE this session — if a search returns nothing, say the backend '
     + 'could not be reached rather than concluding the memory does not exist.'
 }
 
 /** Text of the logged-out status line (configured, so silence would mislead). */
 export const NOT_LOGGED_IN_STATUS_LINE
-  = 'Memory Lake is configured but the memorylake CLI is not logged in, so '
+  = 'MemoryLake is configured but the memorylake CLI is not logged in, so '
     + 'memory recall is UNAVAILABLE this session. Do not treat missing recall '
     + 'results as "no such memory". The /memorylake-init skill walks through login.'
 
@@ -122,11 +122,11 @@ export const NOT_LOGGED_IN_STATUS_LINE
 export function unavailabilityNotice(failure: Unavailable): string {
   switch (failure.state) {
     case 'unconfigured':
-      return 'Memory Lake is not configured on this machine, so nothing was '
+      return 'MemoryLake is not configured on this machine, so nothing was '
         + 'searched or stored. If the user wants persistent memory, suggest '
         + 'they invoke the /memorylake-init skill to set it up.'
     case 'disabled':
-      return 'Memory Lake is disabled by configuration (enabled: false in the '
+      return 'MemoryLake is disabled by configuration (enabled: false in the '
         + 'shared config), so nothing was searched or stored. The user can '
         + 're-enable it in ~/.memorylake/harness/config.md or via /memorylake-init.'
     case 'missing-binary':
@@ -232,7 +232,7 @@ class StatusCache {
       case 'not-logged-in':
         return NOT_LOGGED_IN_STATUS_LINE
       // Missing-binary (and stale unconfigured/disabled snapshots) stay
-      // silent — a session without a working Memory Lake sees no trace of it
+      // silent — a session without a working MemoryLake sees no trace of it
       // unless the failure would otherwise masquerade as missing memory.
       default:
         return ''
@@ -270,7 +270,7 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.tools.register(defineTool({
     name: 'memory_search',
-    description: 'Search the user\'s persistent cross-session memory (Memory Lake) '
+    description: 'Search the user\'s persistent cross-session memory (MemoryLake) '
       + 'for stored facts. Pass 1-3 differently-phrased, statement-style queries '
       + '(pronouns resolved, dates absolute). Results may include unrelated '
       + 'matches; judge each by content. A `notice` in the result explains empty '
@@ -343,13 +343,13 @@ export function apply(ctx: Context, config: Config): void {
       }
       return { facts }
     },
-    presentCall: () => ({ card: 'generic', title: 'Search Memory Lake', kind: 'other' }),
+    presentCall: () => ({ card: 'generic', title: 'Search MemoryLake', kind: 'other' }),
   }))
 
   ctx.tools.register(defineTool({
     name: 'memory_remember',
     description: 'Store durable facts in the user\'s persistent cross-session '
-      + 'memory (Memory Lake). Use for stated preferences, corrections, and '
+      + 'memory (MemoryLake). Use for stated preferences, corrections, and '
       + 'stable facts future sessions will need — one atomic statement per '
       + 'fact, pronouns resolved, dates absolute. Stored facts are searchable '
       + 'immediately. Never store secrets or ephemeral session details.',
@@ -385,7 +385,7 @@ export function apply(ctx: Context, config: Config): void {
         type: 'text',
         text: value.notice !== undefined && value.notice.length > 0
           ? value.notice
-          : `Stored ${value.added.length} fact(s) in Memory Lake. They are searchable immediately, from any project or device.`,
+          : `Stored ${value.added.length} fact(s) in MemoryLake. They are searchable immediately, from any project or device.`,
       }],
     },
     async execute(args, exec) {
@@ -411,12 +411,12 @@ export function apply(ctx: Context, config: Config): void {
       }
       return { added: outcome.added }
     },
-    presentCall: () => ({ card: 'generic', title: 'Remember facts in Memory Lake', kind: 'other' }),
+    presentCall: () => ({ card: 'generic', title: 'Remember facts in MemoryLake', kind: 'other' }),
   }))
 
   ctx.tools.register(defineTool({
     name: 'memory_forget',
-    description: 'Delete facts from the user\'s persistent memory (Memory Lake) '
+    description: 'Delete facts from the user\'s persistent memory (MemoryLake) '
       + 'by fact id (as returned by memory_search). Deletion is immediate and '
       + 'irreversible; an id that never existed lands in not_found.',
     parameters: {
@@ -456,7 +456,7 @@ export function apply(ctx: Context, config: Config): void {
       }
       return { forgotten: outcome.forgotten, not_found: outcome.notFound }
     },
-    presentCall: () => ({ card: 'generic', title: 'Forget facts in Memory Lake', kind: 'other' }),
+    presentCall: () => ({ card: 'generic', title: 'Forget facts in MemoryLake', kind: 'other' }),
   }))
 
   ctx.systemPrompt.section({
@@ -489,16 +489,16 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.skills.register({
     name: 'memorylake-init',
-    description: 'Set up Memory Lake end to end: CLI install, login, and the shared harness config.',
-    whenToUse: 'When the user asks to set up, install, configure, or log in to Memory Lake.',
+    description: 'Set up MemoryLake end to end: CLI install, login, and the shared harness config.',
+    whenToUse: 'When the user asks to set up, install, configure, or log in to MemoryLake.',
     content: INIT_SKILL_CONTENT,
     source: 'runtime',
     invocation: { modelInvocable: false, userInvocable: true },
   })
   ctx.skills.register({
     name: 'memorylake-status',
-    description: 'Diagnose the Memory Lake setup: CLI, login, effective config, connectivity, recall.',
-    whenToUse: 'When the user asks whether Memory Lake works or why memory is unavailable.',
+    description: 'Diagnose the MemoryLake setup: CLI, login, effective config, connectivity, recall.',
+    whenToUse: 'When the user asks whether MemoryLake works or why memory is unavailable.',
     content: STATUS_SKILL_CONTENT,
     source: 'runtime',
     invocation: { modelInvocable: false, userInvocable: true },

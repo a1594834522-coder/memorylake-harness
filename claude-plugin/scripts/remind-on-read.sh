@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse(Read) — remind the model that Memory Lake exists, once per session.
+# PreToolUse(Read) — remind the model that MemoryLake exists, once per session.
 #
 # This hook deliberately does NOT search. An earlier design had it take the
 # target file's `description` as a query and inject the results; that is the
@@ -65,8 +65,8 @@ marker="$state_dir/reminded-${session_id:-unknown}"
 mkdir -p "$state_dir" 2>/dev/null && : >"$marker" 2>/dev/null
 
 read -r -d '' reminder <<'EOF'
-[Memory Lake] You are reading a local auto-memory file. Local memory covers
-only this repository on this machine. Memory Lake may hold related memories
+[MemoryLake] You are reading a local auto-memory file. Local memory covers
+only this repository on this machine. MemoryLake may hold related memories
 written from other projects, other machines, or other clients.
 
 To search it, run: ml-recall "<query>"

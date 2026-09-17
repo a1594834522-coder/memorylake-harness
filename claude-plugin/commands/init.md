@@ -1,10 +1,10 @@
 ---
-description: Set up Memory Lake for this project — CLI install, login, and config, end to end
+description: Set up MemoryLake for this project — CLI install, login, and config, end to end
 disable-model-invocation: true
 allowed-tools: Bash, Read, Write, AskUserQuestion
 ---
 
-Walk the user from a bare plugin install to a working Memory Lake setup. Run
+Walk the user from a bare plugin install to a working MemoryLake setup. Run
 the stages in order; skip any stage that is already satisfied and say so.
 Never print, echo, or write the user's API key anywhere except the
 `memorylake auth login` command itself.
@@ -84,7 +84,7 @@ memorylake auth status
 ```
 
 If not logged in, ask the user for their API key (they can create one in the
-Memory Lake console). The service has two deployments with **separate accounts**: the
+MemoryLake console). The service has two deployments with **separate accounts**: the
 international one at [memorylake.ai](https://memorylake.ai) (the CLI's
 default) and the China one at [memorylake.cn](https://memorylake.cn). Ask
 which console the user's account lives in; international accounts need no
@@ -158,7 +158,7 @@ project that needs a different identity sets it in its own
 
 Before writing, tell the user what a global `sync_on_write: true` means:
 memory files Claude writes in ANY project on this machine are uploaded to
-their Memory Lake workspace. Then ask whether any directories should be
+their MemoryLake workspace. Then ask whether any directories should be
 excluded (work code, client projects); write them as comma-separated path
 prefixes in a `sync_deny` field, e.g. `sync_deny: ~/work, ~/clients`.
 Projects can also opt out individually with a `.claude/memorylake.local.md`

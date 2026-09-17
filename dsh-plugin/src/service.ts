@@ -1,5 +1,5 @@
 /**
- * `ctx.memorylake` — the Memory Lake capability service for dsh.
+ * `ctx.memorylake` — the MemoryLake capability service for dsh.
  *
  * A class-form plugin (default export, as the cordis Loader expects for the
  * class shape) that shells out to the `memorylake` CLI through the
@@ -56,7 +56,7 @@ export interface Config {
   maxOutputBytes: number
 }
 
-/** Whether Memory Lake can serve this session, and if not, why. */
+/** Whether MemoryLake can serve this session, and if not, why. */
 export type Availability =
   | { state: 'ready'; workspace: string }
   | { state: 'unconfigured' }
@@ -198,7 +198,7 @@ function parseForgetPayload(payload: unknown): { forgotten: string[]; notFound: 
   return { forgotten: strings('forgotten'), notFound: strings('not_found') }
 }
 
-/** The Memory Lake capability service (`ctx.memorylake`). */
+/** The MemoryLake capability service (`ctx.memorylake`). */
 export default class MemorylakeService extends Service {
   static inject = ['subprocess']
 

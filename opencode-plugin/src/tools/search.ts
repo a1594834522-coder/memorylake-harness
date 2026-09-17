@@ -1,5 +1,5 @@
 /**
- * `memory_search` — recall from Memory Lake.
+ * `memory_search` — recall from MemoryLake.
  */
 
 import { tool } from '@opencode-ai/plugin'
@@ -10,7 +10,7 @@ import { failureText, type ToolDeps } from './deps.js'
 
 const MAX_TOP_K = 20
 
-const DESCRIPTION = `Search the user's long-term memory in Memory Lake — memories written across projects, machines, and clients, including from Claude Code, which opencode cannot otherwise see.
+const DESCRIPTION = `Search the user's long-term memory in MemoryLake — memories written across projects, machines, and clients, including from Claude Code, which opencode cannot otherwise see.
 
 Reach for this when the user refers to something they told you before, asks what you know about them or their preferences, mentions a past decision or project you have no record of, or whenever you are about to guess at something they may already have told you.
 
@@ -43,14 +43,14 @@ export function searchTool(deps: ToolDeps) {
       const result = await deps.run(argv, { timeoutMs: deps.timeoutMs, signal: ctx.abort })
 
       if (!succeeded(result)) {
-        return failureText(classifyFailure(result), 'search Memory Lake')
+        return failureText(classifyFailure(result), 'search MemoryLake')
       }
 
       const payload = parseJson(result.stdout)
       if (payload === undefined) {
         return failureText(
           { state: 'unreachable', detail: 'the CLI did not return JSON' },
-          'search Memory Lake',
+          'search MemoryLake',
         )
       }
 
