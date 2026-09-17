@@ -1,6 +1,6 @@
-# Memory Lake for QwenPaw
+# MemoryLake for QwenPaw
 
-Memory Lake as a [QwenPaw](https://github.com/agentscope-ai/QwenPaw) memory
+MemoryLake as a [QwenPaw](https://github.com/agentscope-ai/QwenPaw) memory
 backend: persistent memory shared **across projects, machines, and clients**.
 An Agent switched to this backend sees the memories written from Claude Code,
 Codex, dsh, and opencode on the first turn, and everything it stores is
@@ -13,7 +13,7 @@ machinery does the rest: the memory protocol goes into the system prompt,
 relevant memories are **recalled automatically before every reply**, and
 `/memorylake-status` shows what is going on.
 
-Selecting Memory Lake replaces ReMe Light for that Agent. Its Markdown memory
+Selecting MemoryLake replaces ReMe Light for that Agent. Its Markdown memory
 files stay on disk; they are simply no longer read or written.
 
 ## Install
@@ -29,7 +29,7 @@ plugin page (URL or zip upload). Installing from a local checkout also works:
 `qwenpaw plugin install /path/to/qwenpaw-plugin`.
 
 Then, for each Agent that should use it: **Console → Agent settings → Memory
-backend → Memory Lake**, fill the form, save. QwenPaw rebuilds the Agent's
+backend → MemoryLake**, fill the form, save. QwenPaw rebuilds the Agent's
 memory manager on save.
 
 ### Already set up for Claude Code, Codex, dsh, or opencode?
@@ -46,7 +46,7 @@ Fill in the form:
 | --- | --- |
 | Deployment | memorylake.ai (default) or memorylake.cn. The link next to the API key field opens the matching console, where keys are created |
 | API key | Logs the CLI in inside a directory owned by this Agent (`<working dir>/plugin-state/memory-memorylake/cli-home/<agent_id>/`), never touching the machine's own `~/.memorylake` login. Different Agents can use different teams. Re-applied on every start, so a rebuilt container heals itself |
-| Workspace, Actor | Click **Load from Memory Lake** and pick from what the key can see. One workspace is selected for you; your own actor is selected when it is bound to the workspace. Pasting an id still works. Without an actor, memory is read-only |
+| Workspace, Actor | Click **Load from MemoryLake** and pick from what the key can see. One workspace is selected for you; your own actor is selected when it is bound to the workspace. Pasting an id still works. Without an actor, memory is read-only |
 | Automatic recall | On by default; searches with the user's message before each reply. Results per recall: 3 |
 | Install the CLI automatically | On by default. When no `memorylake` binary is on `PATH` or in `~/.memorylake/bin`, the release archive is downloaded, its SHA-256 verified, and the binary installed under `<working dir>/plugin-state/memory-memorylake/bin/` |
 
@@ -80,7 +80,7 @@ accordingly.
   is configured. Facts are written when the model calls the tool.
 - **Conversation sync, off by default.** When switched on in the form, the
   text of what the user says and what the Agent replies is appended to one
-  Memory Lake conversation per chat session, and Memory Lake distills
+  MemoryLake conversation per chat session, and MemoryLake distills
   memories from it in the background. It is sent in batches, every N user
   turns (N is configurable, default 1), and also when QwenPaw compacts the
   context or the user runs `/new`. **Only text is sent**: tool calls, tool
@@ -112,8 +112,8 @@ are currently offered. It is the first thing to run when memory seems off.
 | `base_url` | `""` | passed to that login; empty keeps the CLI default |
 | `workspace` | `""` | overrides the shared config |
 | `actor` | `""` | overrides the shared config; required for writes |
-| `sync_conversations` | `false` | record conversation text to Memory Lake (needs `actor` and `project`) |
-| `project` | `""` | the Memory Lake project the conversation is filed under |
+| `sync_conversations` | `false` | record conversation text to MemoryLake (needs `actor` and `project`) |
+| `project` | `""` | the MemoryLake project the conversation is filed under |
 | `sync_interval` | `1` | send every N user turns (1–20) |
 | `max_message_chars` | `8000` | longer messages are clipped before sending (500–64000) |
 | `auto_recall` | `true` | recall before every reply |
@@ -129,7 +129,7 @@ shared file for its workspace; an Agent with its own workspace has opted in.
 
 ## Uninstall
 
-Switch every Agent that uses Memory Lake back to another backend first;
+Switch every Agent that uses MemoryLake back to another backend first;
 QwenPaw refuses to uninstall a memory plugin whose backend is in use. Then
 `qwenpaw plugin uninstall memory-memorylake`.
 

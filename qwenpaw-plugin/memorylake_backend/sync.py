@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Conversation sync: QwenPaw turns → a Memory Lake conversation.
+"""Conversation sync: QwenPaw turns → a MemoryLake conversation.
 
 QwenPaw hands the backend complete user turns (``auto_memory``); this module
-appends their text to one Memory Lake conversation per QwenPaw session and
+appends their text to one MemoryLake conversation per QwenPaw session and
 lets the server distill memories from it. Nothing is extracted locally.
 
 What goes over the wire, and what does not:
@@ -185,7 +185,7 @@ class SyncState:
             tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
             tmp.replace(path)
         except OSError:
-            logger.warning("Memory Lake: could not write sync state %s", path, exc_info=True)
+            logger.warning("MemoryLake: could not write sync state %s", path, exc_info=True)
 
     # assistant actor
     @property
@@ -270,7 +270,7 @@ class ConversationSync:
         # not a failure of ours, so the outcome is logged and not returned.
         bind = await self._run(cli.actor_bind_argv(self.binary, actor_id, self.workspace))
         if not bind.ok:
-            logger.info("Memory Lake: actor bind for %s: %s", actor_id, bind.stderr.strip()[:200])
+            logger.info("MemoryLake: actor bind for %s: %s", actor_id, bind.stderr.strip()[:200])
         self.state.set_assistant_actor(actor_id)
         return actor_id, None
 
@@ -361,7 +361,7 @@ class ConversationSync:
         self.state.save_session(session_id, session)
         self.last_report = report
         if report.failure is not None:
-            logger.warning("Memory Lake: %s", report.summary())
+            logger.warning("MemoryLake: %s", report.summary())
         return report
 
     async def cook_status(self, session_id: str) -> str:

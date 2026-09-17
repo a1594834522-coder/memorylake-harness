@@ -31,8 +31,8 @@ def test_every_failure_status_says_unavailable_and_not_evidence() -> None:
 
 def test_failure_text_never_reads_as_empty() -> None:
     for state in ("not-installed", "not-logged-in", "unreachable"):
-        text = failure_text(CliFailure(state, "boom"), "search Memory Lake")  # type: ignore[arg-type]
-        assert text.startswith("Could not search Memory Lake")
+        text = failure_text(CliFailure(state, "boom"), "search MemoryLake")  # type: ignore[arg-type]
+        assert text.startswith("Could not search MemoryLake")
         assert 'no relevant memories' in text
     assert "(boom)" in failure_text(CliFailure("unreachable", "boom"), "x")
 

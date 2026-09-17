@@ -25,9 +25,9 @@ class BackendStatus:
     detail: str = ""
 
 
-PROTOCOL_READ = """## Memory Lake
+PROTOCOL_READ = """## MemoryLake
 
-Memory Lake is the user's long-term memory **across projects, machines, and
+MemoryLake is the user's long-term memory **across projects, machines, and
 clients**. It replaces QwenPaw's built-in memory for this Agent, and it holds
 memories written by other tools — Claude Code, Codex, opencode, dsh — that
 QwenPaw cannot otherwise see. Anything the user told you before this session,
@@ -104,15 +104,15 @@ NO_ACTOR_BLOCK = (
     "No actor is configured, so storing new memories is unavailable for this "
     "Agent and the `memory_remember` tool is not offered. Recall still works. "
     "If the user asks you to remember something, say it cannot be stored right "
-    "now and that an actor must be set in this Agent's Memory Lake settings — "
+    "now and that an actor must be set in this Agent's MemoryLake settings — "
     "do not claim to have saved it."
 )
 
 SYNC_BLOCK = """### Conversation sync
 
-This Agent's conversations with the user are recorded to Memory Lake
+This Agent's conversations with the user are recorded to MemoryLake
 automatically: the text of what the user says and what you reply is appended
-to a per-session conversation, and Memory Lake distills memories from it in
+to a per-session conversation, and MemoryLake distills memories from it in
 the background. Tool calls, tool results, and your reasoning are not recorded.
 
 Because of this, do not use `memory_remember` to paraphrase the conversation —
@@ -122,15 +122,15 @@ else the user tells you in plain text will reach memory on its own, with a
 delay of minutes rather than seconds."""
 
 UNCONFIGURED_BLOCK = (
-    "## Memory Lake\n\n"
-    "Memory Lake is selected as this Agent's memory backend but not configured, "
+    "## MemoryLake\n\n"
+    "MemoryLake is selected as this Agent's memory backend but not configured, "
     "so this session has no long-term memory: nothing the user told you in "
     "earlier sessions, other projects, or other tools is available. Do not claim "
     "to remember anything across sessions, and do not offer to remember things "
     "for later.\n\n"
     "If the user asks to set up, connect, or fix memory — or wonders why you do "
     "not remember them — tell them to open this Agent's settings in the QwenPaw "
-    "Console, choose Memory Lake as the memory backend, and fill in the API key "
+    "Console, choose MemoryLake as the memory backend, and fill in the API key "
     "and workspace; `/memorylake-status` shows what is missing. Do not raise it "
     "unprompted."
 )
@@ -139,13 +139,13 @@ UNCONFIGURED_BLOCK = (
 def render_status(status: BackendStatus) -> str:
     if status.state == "connected":
         return (
-            f"### Status\n\nMemory Lake is connected ({status.projects} project(s)). "
+            f"### Status\n\nMemoryLake is connected ({status.projects} project(s)). "
             "Use the `memory_search` tool to recall, and `memory_remember` to store "
             "a durable fact the user would expect you to know next time."
         )
     if status.state == "cli-missing":
         return (
-            "### Status\n\nMemory Lake is configured but the `memorylake` CLI is not "
+            "### Status\n\nMemoryLake is configured but the `memorylake` CLI is not "
             "installed and could not be installed, so recall is UNAVAILABLE this "
             "session. Do not treat the absence of memories as evidence that the "
             "user never told you something — say the memory backend could not be "
@@ -153,14 +153,14 @@ def render_status(status: BackendStatus) -> str:
         )
     if status.state == "not-logged-in":
         return (
-            "### Status\n\nMemory Lake is configured but not authenticated, so "
+            "### Status\n\nMemoryLake is configured but not authenticated, so "
             "recall is UNAVAILABLE this session. Tell the user to set the API key "
-            "in this Agent's Memory Lake settings, or to run `memorylake auth "
+            "in this Agent's MemoryLake settings, or to run `memorylake auth "
             "login` on the host. Do not treat missing memories as \"you never "
             "told me that\"."
         )
     return (
-        "### Status\n\nMemory Lake is configured but unreachable, so recall is "
+        "### Status\n\nMemoryLake is configured but unreachable, so recall is "
         "UNAVAILABLE this session. If you cannot find something, say the memory "
         "backend could not be reached — do not conclude the memory does not exist."
     )
@@ -194,8 +194,8 @@ def failure_text(failure: CliFailure, action: str) -> str:
         )
     if failure.state == "not-logged-in":
         return (
-            f"Could not {action}: Memory Lake is not authenticated. Ask the user "
-            "to set the API key in this Agent's Memory Lake settings. Do not read "
+            f"Could not {action}: MemoryLake is not authenticated. Ask the user "
+            "to set the API key in this Agent's MemoryLake settings. Do not read "
             "this as \"no relevant memories\" — the backend was never consulted."
         )
     return (

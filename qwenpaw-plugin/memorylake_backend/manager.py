@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""The Memory Lake memory backend for QwenPaw.
+"""The MemoryLake memory backend for QwenPaw.
 
 Fills QwenPaw's memory backend slot: the platform injects
 ``get_memory_prompt()`` into the system prompt, adds ``list_memory_tools()``
 to the toolkit, runs ``auto_memory_search`` before every model call, and
-queues ``auto_memory`` after turns. This class supplies the Memory Lake
+queues ``auto_memory`` after turns. This class supplies the MemoryLake
 half of each, through the ``memorylake`` CLI and nothing else.
 """
 
@@ -66,7 +66,7 @@ def _chunk(text: str, *, ok: bool = True) -> ToolChunk:
 
 
 class MemoryLakeMemoryManager(BaseMemoryManager):
-    """Memory Lake as a QwenPaw memory backend."""
+    """MemoryLake as a QwenPaw memory backend."""
 
     def __init__(
         self,
@@ -132,7 +132,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
                 failure = cli.classify_failure(result)
                 self.login_error = failure.detail or failure.state
                 self.status = BackendStatus("not-logged-in", detail=self.login_error)
-                logger.warning("Memory Lake: login failed: %s", self.login_error)
+                logger.warning("MemoryLake: login failed: %s", self.login_error)
                 return
 
         await self.probe()
@@ -157,7 +157,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
 
     @property
     def syncing(self) -> bool:
-        """Whether turns are being appended to a Memory Lake conversation."""
+        """Whether turns are being appended to a MemoryLake conversation."""
         return self.sync is not None and self.usable
 
     async def probe(self) -> BackendStatus:
@@ -218,7 +218,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
         return self.effective.sync_interval if self.syncing else 0
 
     async def auto_memory(self, messages: list[Msg], **kwargs: Any) -> str:
-        """Append the turns' text to this session's Memory Lake conversation.
+        """Append the turns' text to this session's MemoryLake conversation.
 
         Called on QwenPaw's serial auto-memory worker, so one Agent never
         appends concurrently. The synthetic recall exchange QwenPaw injects
@@ -227,7 +227,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
             return ""
         session_id = str(kwargs.get("session_id") or "")
         if not session_id:
-            logger.warning("Memory Lake: conversation sync skipped, no session id (agent=%s)", self.agent_id)
+            logger.warning("MemoryLake: conversation sync skipped, no session id (agent=%s)", self.agent_id)
             return "conversation sync skipped: no session id"
         messages = self._messages_without_auto_memory_search(messages)
         report = await self.sync.sync(messages, session_id, trigger=str(kwargs.get("trigger") or ""))
@@ -267,7 +267,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
         max_results: int = 5,
         **kwargs: Any,
     ) -> ToolChunk:
-        """Search the user's long-term memory in Memory Lake — memories written
+        """Search the user's long-term memory in MemoryLake — memories written
         across projects, machines, and clients, including from Claude Code,
         Codex, opencode, and dsh, which this Agent cannot otherwise see.
 
@@ -292,7 +292,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
             return _chunk("Error: query cannot be empty", ok=False)
         top_k = min(max(1, int(max_results or self.effective.top_k)), MAX_TOP_K)
         if not self.usable:
-            return _chunk(failure_text(self._unusable_failure(), "search Memory Lake"), ok=False)
+            return _chunk(failure_text(self._unusable_failure(), "search MemoryLake"), ok=False)
         assert self.binary is not None
         result = await self._cli(
             cli.search_argv(self.binary, self.effective.workspace, self.effective.actor, top_k, query),
@@ -300,13 +300,13 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
         if not result.ok:
             failure = cli.classify_failure(result)
             self.status = status_from_failure(failure)
-            return _chunk(failure_text(failure, "search Memory Lake"), ok=False)
+            return _chunk(failure_text(failure, "search MemoryLake"), ok=False)
         payload = cli.parse_json(result.stdout)
         if payload is None:
             return _chunk(
                 failure_text(
                     cli.CliFailure("unreachable", "the CLI did not return JSON"),
-                    "search Memory Lake",
+                    "search MemoryLake",
                 ),
                 ok=False,
             )
@@ -438,7 +438,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
     async def status_report(self) -> str:
         """Human-readable diagnostics for ``/memorylake-status``."""
         eff = self.effective
-        lines = ["Memory Lake — status for this Agent", ""]
+        lines = ["MemoryLake — status for this Agent", ""]
         lines.append(f"config state: {eff.state}")
         lines.append(
             "shared config: "

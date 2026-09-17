@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Memory Lake memory plugin entry point."""
+"""MemoryLake memory plugin entry point."""
 
 from memorylake_backend import MemoryLakeConfig, MemoryLakeMemoryManager, POLICY_NAMES
 from memorylake_backend.routes import build_router
@@ -13,11 +13,11 @@ class MemoryLakePlugin:
         api.register_memory_backend(
             backend_id="memorylake",
             factory=MemoryLakeMemoryManager,
-            label="Memory Lake",
+            label="MemoryLake",
             config_schema=MemoryLakeConfig,
             metadata={
                 "description": (
-                    "Memory Lake: long-term memory shared across projects, "
+                    "MemoryLake: long-term memory shared across projects, "
                     "machines, and clients (Claude Code, Codex, dsh, opencode)"
                 ),
                 "network_access": True,
@@ -42,7 +42,7 @@ class MemoryLakePlugin:
         api.register_slash_command(
             name="memorylake-status",
             handler=handle_status,
-            help_text="Show Memory Lake configuration, CLI, login, and connectivity for this Agent",
+            help_text="Show MemoryLake configuration, CLI, login, and connectivity for this Agent",
         )
         # Backs the Console form's workspace / actor pickers.
         api.register_http_router(build_router(WORKING_DIR), prefix="/memorylake", tags=["memorylake"])

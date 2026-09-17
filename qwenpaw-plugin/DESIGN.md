@@ -1,4 +1,4 @@
-# Memory Lake for QwenPaw — design
+# MemoryLake for QwenPaw — design
 
 Status: implemented (v0.1.0). §9 records what was verified and what changed.
 
@@ -30,7 +30,7 @@ does not build any of that machinery.
 So this plugin is a **memory backend**, not a middleware, not a tool bundle.
 It replaces ReMe Light for the Agents that select it. That exclusivity is a
 platform design (there is a built-in `"none"` backend for the same slot), and
-the README states it plainly: an Agent on Memory Lake is not on ReMe.
+the README states it plainly: an Agent on MemoryLake is not on ReMe.
 
 The product story is the same one as opencode: **connect the memories you
 already have.** A user running Claude Code already has memories in Memory
@@ -69,7 +69,7 @@ the backend an `agent.json` names is registered before its manager is built.
 api.register_memory_backend(
     backend_id="memorylake",        # normalized: strip + lower
     factory=MemoryLakeMemoryManager, # (context: MemoryBackendContext) -> manager
-    label="Memory Lake",
+    label="MemoryLake",
     config_schema=MemoryLakeConfig,  # pydantic; validates memory_backend_configs.memorylake
     metadata={
         "description": ...,
@@ -184,7 +184,7 @@ out to matter, it is a second plugin, not a mode of this one.
 
 ### D2 — CLI remains the only transport; the plugin supplies it
 
-Every harness talks to Memory Lake through the `memorylake` CLI and never
+Every harness talks to MemoryLake through the `memorylake` CLI and never
 through HTTP. That holds here. What changes is who installs it (§2.6):
 
 Resolution order in `start()`:
@@ -248,7 +248,7 @@ not a repository checkout and there is no session directory to walk up from.
 v0.1.0 had no automatic write-back. v0.2.0 adds it as an **opt-in**
 (`sync_conversations`, default `false`) and takes the conversation route
 rather than local extraction: `auto_memory()` appends the turns' text to one
-Memory Lake conversation per QwenPaw session (`memorylake conversation
+MemoryLake conversation per QwenPaw session (`memorylake conversation
 message append`) and the server distills memories from it. Reasons:
 
 - The CLI's conversation commands exist for exactly this: messages are
@@ -491,7 +491,7 @@ Works against a running QwenPaw (hot-loaded via the install API) and against
 a stopped one (loaded on next start). Docker: the same command through
 `docker exec`, or the Console's plugin page (upload or URL).
 
-Then, per Agent: Console → Agent settings → memory backend → Memory Lake, fill
+Then, per Agent: Console → Agent settings → memory backend → MemoryLake, fill
 the form, save. Or edit `agent.json`:
 
 ```json
@@ -530,7 +530,7 @@ Code.
 
 - Local memory extraction (D4: the server distills; the plugin only records)
 - Coexisting with ReMe Light on one Agent (D1)
-- Direct HTTP to Memory Lake
+- Direct HTTP to MemoryLake
 - Showing relevance scores to the model
 - Listing in the AgentScope plugin market or download CDN — a later step that
   needs their packaging pipeline

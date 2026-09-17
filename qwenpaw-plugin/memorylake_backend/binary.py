@@ -60,11 +60,11 @@ async def ensure_binary(
             return binary, ""
         try:
             binary = await asyncio.to_thread(installer, plugin_bin_dir(host_working_dir))
-            logger.info("Memory Lake: installed memorylake CLI at %s", binary)
+            logger.info("MemoryLake: installed memorylake CLI at %s", binary)
             return binary, ""
         except InstallError as exc:
-            logger.warning("Memory Lake: CLI install failed: %s", exc)
+            logger.warning("MemoryLake: CLI install failed: %s", exc)
             return None, str(exc)
         except Exception as exc:  # network, filesystem — never fatal
-            logger.warning("Memory Lake: CLI install failed: %s", exc)
+            logger.warning("MemoryLake: CLI install failed: %s", exc)
             return None, f"{type(exc).__name__}: {exc}"
