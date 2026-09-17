@@ -72,7 +72,12 @@ accordingly.
 
 - **Automatic recall** before every reply, when there are relevant facts. It
   is injected as a synthetic tool exchange for that turn only and never enters
-  the persisted history. Turn it off per Agent in the form.
+  the persisted history. The whole message is the query (QwenPaw's default
+  keeps 50 characters); slash commands and bare acknowledgements are not
+  searched. Turn it off per Agent in the form.
+- **A search playbook in the system prompt**: what automatic recall misses,
+  when to search again, how to phrase a query the way a memory is written,
+  when to stop, how to use a hit.
 - **`memory_search`** for anything automatic recall missed. Facts first,
   ordered by relevance, scores never shown; an empty result carries a hint
   rather than a bare empty list.

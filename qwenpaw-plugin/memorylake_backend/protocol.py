@@ -33,43 +33,68 @@ memories written by other tools — Claude Code, Codex, opencode, dsh — that
 QwenPaw cannot otherwise see. Anything the user told you before this session,
 or told a different assistant, is here or nowhere.
 
-Relevant memories are recalled automatically before you answer, when there
-are any. That recall uses the user's message as the query and can miss; the
-`memory_search` tool is how you look for what it did not find.
+### Automatic recall, and what it misses
+
+Before you answer, the user's latest message is run through `memory_search`
+**verbatim**, and real hits are shown to you as a tool result. Treat that as
+a first, cheap pass, not as the answer to "what do I know". It fails
+predictably:
+
+- the message is short, conversational, or a follow-up ("and the other
+  one?", "same as last time") — the words carry no searchable content
+- the message uses pronouns or relative time ("her deadline", "last month")
+- the message covers several things at once, so one query matches none well
+- the memory is phrased differently from the question (the user said "I
+  work at Acme"; they now ask about "my company")
+
+In each of these cases, and whenever nothing came back but the answer
+plausibly exists, search yourself with a better query. Not searching when
+the user has told you something before is the failure that costs their
+trust; one extra tool call is cheap.
 
 ### When to search
 
-- the user refers to something they told you before
-- a question about the user, their preferences, or past decisions
-- a project, document, or fact you have no record of in this session
-- you are about to say "you never mentioned that", or to guess at a preference
+- the user refers to something they told you before, in any session or tool
+- a question about the user: preferences, setup, habits, people, projects
+- a decision, plan, document, or fact you have no record of in this session
+- you are about to write "you never mentioned that", or to guess at a
+  preference, or to ask for information a long-term user would expect you to
+  have
 
-Searching costs one tool call. Guessing at something the user already told you
-costs their trust, so prefer the tool call.
+### How to write a query
 
-### How to phrase a query
+`memory_search` matches stored statements, so **write the query the way the
+memory would be written**, not the way the question was asked:
 
-- **statement-style keywords beat questions**: `user's preferred editor`
+- **statement-style keywords, not questions**: `user's preferred editor`
   finds more than `what editor do you like?`
 - **resolve pronouns to names**: `Alice's review deadline`, not `her deadline`
-- **make relative dates absolute**: `2026-07 migration`, not `last month's`
-- **one intent per query** — two ideas in one query match neither well
-- for a vague question, run 2-3 differently-phrased searches rather than one
-  long one
+- **absolute dates**: `2026-07 migration`, not `last month's migration`
+- **one intent per query**: "my flight and the hotel" is two searches
+- **name the entity first**: `Acme API auth decision`, not `the decision we
+  made about how to do auth on that API project`
+
+For a vague or broad question, run two or three **differently phrased**
+searches — entity, then event, then time period — rather than one long
+query. Stop when a hit answers the question or when two reformulations came
+back empty; then say plainly that nothing is stored about it.
 
 ### How to read results
 
-Results come back most-relevant-first, but the engine returns matches even for
-a query with no good answer, so **judge every hit by reading it**.
+Results come back most-relevant-first, but the engine returns matches even
+for a query with no good answer, so **judge every hit by reading it**. A hit
+that does not answer the question is not evidence of anything.
 
-In particular, **memories carry no scope**. A memory written while working in
-another repository, for another organization, or on another machine may be
-recorded in absolute terms and still not apply here. Check what a memory is
-actually about before acting on it, and prefer what the user says in this
-session over anything stored.
+**Memories carry no scope.** A memory written while working in another
+repository, for another organization, or on another machine may be recorded
+in absolute terms and still not apply here. Check what a memory is actually
+about before acting on it, and prefer what the user says in this session over
+anything stored.
 
-Never present a stored memory to the user as though they said it just now, and
-do not mention retrieved memories at all unless they bear on the answer."""
+Use what you found without ceremony: fold it into the answer, do not list
+"memories I retrieved", and never present a stored memory to the user as
+though they said it just now. Mention where something came from only when
+the user would otherwise wonder how you know it."""
 
 PROTOCOL_WRITE = """### When to remember
 

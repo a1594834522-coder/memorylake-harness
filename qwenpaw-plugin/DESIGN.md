@@ -297,6 +297,26 @@ the user explicitly asks to keep, so nothing is stored twice.
 
 ### D5 — Automatic recall on, using the platform's flow
 
+Two adjustments to that flow, both in the manager (0.2.0):
+
+- **The query is the whole message.** The base class truncates the user's
+  message to 50 characters before searching, which cuts most real questions
+  in half. `_build_query` is overridden to use the full text, capped at 300.
+- **Some messages are not searched.** Slash commands, bare acknowledgements
+  ("ok", "好的", "谢谢"), and messages with fewer than four letters or digits
+  skip recall (`recall.py`). Nothing rewrites the user's words: the protocol
+  tells the model recall ran verbatim and when to search again with a
+  better query, and a rewrite without a model would make that false.
+
+The protocol text itself (`PROTOCOL_READ`) is a search playbook rather than
+a rule list: what automatic recall predictably misses, when to search, how
+to phrase a query as the memory would be written (with examples), how many
+reformulations before saying nothing is stored, and how to use a hit. It
+stays in the system prompt — a skill would be installed per workspace, so
+Agents on another backend would see instructions for a tool they lack, and
+loading it on demand puts the "should I search" judgment behind an extra
+step. About 990 words with sync on.
+
 `get_auto_memory_search_options()` returns `AutoMemorySearchOptions(
 max_results=auto_recall_top_k)` when `auto_recall` is on (default), `None`
 otherwise. The platform searches once per user turn and injects the rendered

@@ -55,3 +55,12 @@ def test_sync_block_only_when_syncing() -> None:
     text = build_memory_prompt(connected, can_write=True, syncing=True)
     assert SYNC_BLOCK in text and text.index(PROTOCOL_WRITE) < text.index(SYNC_BLOCK) < text.index("### Status")
     assert "Tool calls, tool results, and your reasoning are not recorded" in SYNC_BLOCK
+
+
+def test_read_protocol_teaches_the_search_playbook() -> None:
+    from memorylake_backend.protocol import PROTOCOL_READ
+    for heading in ("### Automatic recall, and what it misses", "### When to search", "### How to write a query", "### How to read results"):
+        assert heading in PROTOCOL_READ
+    assert "verbatim" in PROTOCOL_READ and "differently phrased" in PROTOCOL_READ
+    assert "Memories carry no scope" in PROTOCOL_READ
+    assert PROTOCOL_READ.index("### Automatic recall") < PROTOCOL_READ.index("### When to search") < PROTOCOL_READ.index("### How to write a query")

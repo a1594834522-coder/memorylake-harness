@@ -40,6 +40,7 @@ from .protocol import (
     failure_text,
     status_from_failure,
 )
+from .recall import recall_query
 from .render import normalize_search_payload, render_search_result
 from .sync import ConversationSync, SyncReport
 
@@ -245,6 +246,22 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
             max_results=self.effective.auto_recall_top_k,
             estimate_divisor=self.context.token_estimate_divisor,
         )
+
+    @staticmethod
+    def _build_query(messages: list[Msg]) -> str:
+        """The query automatic recall runs with.
+
+        The platform's default keeps only the first 50 characters of the
+        user's message, which cuts most real questions in half. This takes
+        the whole text (capped at ``recall.MAX_QUERY_CHARS``) and skips
+        messages that cannot carry a searchable statement (see ``recall``)."""
+        for msg in reversed(messages):
+            if msg.role != "user":
+                continue
+            text = (msg.get_text_content() or "").strip()
+            if text:
+                return recall_query(text)
+        return ""
 
     async def _search_for_auto_memory(
         self,

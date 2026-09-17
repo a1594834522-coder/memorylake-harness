@@ -358,3 +358,29 @@ async def test_sync_failure_updates_status_not_silent(tmp_path, data_dir, script
     assert summary.startswith("conversation sync FAILED (not-logged-in")
     assert m.status.state == "not-logged-in"
     assert "last batch: conversation sync FAILED" in await m.status_report()
+
+
+# ------------------------------------------------------------- recall query
+
+async def test_auto_recall_skips_fillers_and_commands(tmp_path, data_dir, scripted) -> None:
+    m = make_manager(tmp_path, scripted, READY)
+    await m.start()
+    scripted.calls.clear()
+    for text in ("好的", "/compact", "ok"):
+        result = await m.auto_memory_search(Msg(name="u", role="user", content=[TextBlock(type="text", text=text)]))
+        assert result is None
+    assert scripted.argv_for("search") == []
+    scripted.on("search", stdout={"facts": [{"id": "f1", "fact": "Prefers vim"}]})
+    result = await m.auto_memory_search(Msg(name="u", role="user", content=[TextBlock(type="text", text="which editor do I prefer?")]))
+    assert result is not None and result["query"] == "which editor do I prefer?"
+    assert scripted.argv_for("search")[0][-1] == "which editor do I prefer?"
+
+
+async def test_auto_recall_query_is_not_cut_at_50_chars(tmp_path, data_dir, scripted) -> None:
+    m = make_manager(tmp_path, scripted, READY)
+    await m.start()
+    scripted.on("search", stdout={"facts": [{"id": "f1", "fact": "x"}]})
+    long_question = "what did we decide about the authentication approach for the Acme API project in July?"
+    assert len(long_question) > 50
+    result = await m.auto_memory_search(Msg(name="u", role="user", content=[TextBlock(type="text", text=long_question)]))
+    assert result is not None and result["query"] == long_question
