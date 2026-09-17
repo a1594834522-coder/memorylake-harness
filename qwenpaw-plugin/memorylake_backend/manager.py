@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""The Memory Lake memory backend for QwenPaw.
+"""The MemoryLake memory backend for QwenPaw.
 
 Fills QwenPaw's memory backend slot: the platform injects
 ``get_memory_prompt()`` into the system prompt, adds ``list_memory_tools()``
 to the toolkit, runs ``auto_memory_search`` before every model call, and
-queues ``auto_memory`` after turns. This class supplies the Memory Lake
+queues ``auto_memory`` after turns. This class supplies the MemoryLake
 half of each, through the ``memorylake`` CLI and nothing else.
 """
 
@@ -25,7 +25,7 @@ from qwenpaw.memory import (
 )
 
 from . import cli
-from .binary import PLUGIN_ID, cli_home_dir, ensure_binary, plugin_state_dir
+from .binary import PLUGIN_ID, cli_home_dir, ensure_binary, plugin_state_dir, sync_state_dir
 from .config import EffectiveConfig, MemoryLakeConfig, resolve_config
 from .harness_config import (
     read_shared_config,
@@ -40,7 +40,9 @@ from .protocol import (
     failure_text,
     status_from_failure,
 )
+from .recall import recall_query
 from .render import normalize_search_payload, render_search_result
+from .sync import ConversationSync, SyncReport
 
 __all__ = ["MemoryLakeMemoryManager", "POLICY_NAMES", "PLUGIN_ID", "plugin_state_dir"]
 
@@ -65,7 +67,7 @@ def _chunk(text: str, *, ok: bool = True) -> ToolChunk:
 
 
 class MemoryLakeMemoryManager(BaseMemoryManager):
-    """Memory Lake as a QwenPaw memory backend."""
+    """MemoryLake as a QwenPaw memory backend."""
 
     def __init__(
         self,
@@ -87,6 +89,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
         self.status: BackendStatus = BackendStatus("unreachable", detail="not started")
         self.install_error: str = ""
         self.login_error: str = ""
+        self.sync: ConversationSync | None = None
         for name, policy in POLICY_NAMES.items():
             setattr(getattr(self, name).__func__, "_qwenpaw_policy_name", policy)
 
@@ -130,10 +133,33 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
                 failure = cli.classify_failure(result)
                 self.login_error = failure.detail or failure.state
                 self.status = BackendStatus("not-logged-in", detail=self.login_error)
-                logger.warning("Memory Lake: login failed: %s", self.login_error)
+                logger.warning("MemoryLake: login failed: %s", self.login_error)
                 return
 
         await self.probe()
+        self._configure_sync()
+
+    def _configure_sync(self) -> None:
+        eff = self.effective
+        if self.binary is None or not eff.can_sync:
+            self.sync = None
+            return
+        assert self.context is not None
+        self.sync = ConversationSync(
+            run=self._cli,
+            binary=self.binary,
+            workspace=eff.workspace,
+            actor=eff.actor,
+            project=eff.project,
+            agent_id=self.agent_id,
+            state_dir=sync_state_dir(self.context.host_working_dir, self.agent_id),
+            max_chars=eff.max_message_chars,
+        )
+
+    @property
+    def syncing(self) -> bool:
+        """Whether turns are being appended to a MemoryLake conversation."""
+        return self.sync is not None and self.usable
 
     async def probe(self) -> BackendStatus:
         """Check connectivity, reusing another harness's fresh probe."""
@@ -171,7 +197,9 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
             return ""
         if state == "unconfigured":
             return UNCONFIGURED_BLOCK
-        return build_memory_prompt(self.status, self.effective.can_write and self.usable)
+        return build_memory_prompt(
+            self.status, self.effective.can_write and self.usable, syncing=self.syncing,
+        )
 
     def is_memory_search_enabled(self) -> bool:
         return self.usable
@@ -186,11 +214,29 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
         return tools
 
     def get_auto_memory_interval(self) -> int:
-        return 0
+        """Every ``sync_interval`` user turns QwenPaw hands us those turns;
+        ``0`` (sync off, or backend unusable) stops it from calling at all."""
+        return self.effective.sync_interval if self.syncing else 0
 
     async def auto_memory(self, messages: list[Msg], **kwargs: Any) -> str:
-        del messages, kwargs
-        return ""
+        """Append the turns' text to this session's MemoryLake conversation.
+
+        Called on QwenPaw's serial auto-memory worker, so one Agent never
+        appends concurrently. The synthetic recall exchange QwenPaw injects
+        before model calls is stripped first: it is our own output."""
+        if self.sync is None:
+            return ""
+        session_id = str(kwargs.get("session_id") or "")
+        if not session_id:
+            logger.warning("MemoryLake: conversation sync skipped, no session id (agent=%s)", self.agent_id)
+            return "conversation sync skipped: no session id"
+        messages = self._messages_without_auto_memory_search(messages)
+        report = await self.sync.sync(messages, session_id, trigger=str(kwargs.get("trigger") or ""))
+        if report.failure is not None:
+            self.status = status_from_failure(report.failure)
+        elif report.appended:
+            self._mark_connected()
+        return report.summary()
 
     async def get_auto_memory_search_options(self) -> AutoMemorySearchOptions | None:
         if not (self.usable and self.effective.auto_recall):
@@ -200,6 +246,22 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
             max_results=self.effective.auto_recall_top_k,
             estimate_divisor=self.context.token_estimate_divisor,
         )
+
+    @staticmethod
+    def _build_query(messages: list[Msg]) -> str:
+        """The query automatic recall runs with.
+
+        The platform's default keeps only the first 50 characters of the
+        user's message, which cuts most real questions in half. This takes
+        the whole text (capped at ``recall.MAX_QUERY_CHARS``) and skips
+        messages that cannot carry a searchable statement (see ``recall``)."""
+        for msg in reversed(messages):
+            if msg.role != "user":
+                continue
+            text = (msg.get_text_content() or "").strip()
+            if text:
+                return recall_query(text)
+        return ""
 
     async def _search_for_auto_memory(
         self,
@@ -222,7 +284,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
         max_results: int = 5,
         **kwargs: Any,
     ) -> ToolChunk:
-        """Search the user's long-term memory in Memory Lake — memories written
+        """Search the user's long-term memory in MemoryLake — memories written
         across projects, machines, and clients, including from Claude Code,
         Codex, opencode, and dsh, which this Agent cannot otherwise see.
 
@@ -241,13 +303,17 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
             max_results (`int`, optional):
                 How many results to return. Defaults to 5, at most 20.
         """
-        del kwargs
-        query = query.strip()
+        stray = sorted(k for k in kwargs if k != "tool_call_id")
+        query = (query or "").strip()
         if not query:
-            return _chunk("Error: query cannot be empty", ok=False)
+            return _chunk(
+                "Error: memory_search needs `query` (the text to search for). It takes "
+                "only `query` and `max_results`; it is not `recall_history`.",
+                ok=False,
+            )
         top_k = min(max(1, int(max_results or self.effective.top_k)), MAX_TOP_K)
         if not self.usable:
-            return _chunk(failure_text(self._unusable_failure(), "search Memory Lake"), ok=False)
+            return _chunk(failure_text(self._unusable_failure(), "search MemoryLake"), ok=False)
         assert self.binary is not None
         result = await self._cli(
             cli.search_argv(self.binary, self.effective.workspace, self.effective.actor, top_k, query),
@@ -255,18 +321,26 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
         if not result.ok:
             failure = cli.classify_failure(result)
             self.status = status_from_failure(failure)
-            return _chunk(failure_text(failure, "search Memory Lake"), ok=False)
+            return _chunk(failure_text(failure, "search MemoryLake"), ok=False)
         payload = cli.parse_json(result.stdout)
         if payload is None:
             return _chunk(
                 failure_text(
                     cli.CliFailure("unreachable", "the CLI did not return JSON"),
-                    "search Memory Lake",
+                    "search MemoryLake",
                 ),
                 ok=False,
             )
         self._mark_connected()
-        return _chunk(render_search_result(normalize_search_payload(payload)))
+        text = render_search_result(normalize_search_payload(payload))
+        if stray:
+            # The model borrowed another tool's argument shape; the search
+            # still ran, so answer it — and correct the shape in passing.
+            text += (
+                f"\n\n(memory_search takes only `query` and `max_results`; "
+                f"{', '.join(stray)} ignored.)"
+            )
+        return _chunk(text)
 
     async def memory_remember(self, fact: str, **kwargs: Any) -> ToolChunk:
         """Store one durable fact in the user's long-term memory, so it is
@@ -393,7 +467,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
     async def status_report(self) -> str:
         """Human-readable diagnostics for ``/memorylake-status``."""
         eff = self.effective
-        lines = ["Memory Lake — status for this Agent", ""]
+        lines = ["MemoryLake — status for this Agent", ""]
         lines.append(f"config state: {eff.state}")
         lines.append(
             "shared config: "
@@ -414,6 +488,7 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
                if eff.owns_login else "shared (the machine's memorylake CLI login)"),
         )
         lines.append(f"auto recall: {'on' if eff.auto_recall else 'off'} (top_k {eff.auto_recall_top_k})")
+        lines.append(self._sync_status_line())
         lines.append("")
         if self.binary is None:
             lines.append("cli: not found" + (f" — install failed: {self.install_error}" if self.install_error else ""))
@@ -434,6 +509,23 @@ class MemoryLakeMemoryManager(BaseMemoryManager):
         tools = [getattr(t, "__name__", str(t)) for t in self.list_memory_tools()]
         lines.append(f"tools offered: {', '.join(tools) if tools else 'none'}")
         return "\n".join(lines)
+
+    def _sync_status_line(self) -> str:
+        eff = self.effective
+        if not eff.sync_conversations:
+            return "conversation sync: off"
+        if eff.sync_blocker:
+            return f"conversation sync: ON but inactive — {eff.sync_blocker}"
+        line = (
+            f"conversation sync: on (every {eff.sync_interval} turn(s), project {eff.project}, "
+            f"text only, up to {eff.max_message_chars} chars per message)"
+        )
+        last: SyncReport | None = self.sync.last_report if self.sync is not None else None
+        if last is not None:
+            line += f"\n  last batch: {last.summary()}"
+            if last.conversation_id:
+                line += f" [{last.conversation_id}]"
+        return line
 
 
 def _first_fact_id(payload: Any) -> str | None:

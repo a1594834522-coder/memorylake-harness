@@ -19,9 +19,11 @@ from dataclasses import dataclass, field
 from typing import Any
 
 EMPTY_RESULT_HINT = (
-    "No memories matched. Retry ONCE with different wording — entity names, "
-    "synonyms, statement-style keywords. If still nothing, tell the user "
-    "honestly; do not invent an answer."
+    "No stored memory matched. Retry ONCE with different wording — entity "
+    "names, synonyms, statement-style keywords. If still nothing: say you have "
+    "no record of it and offer to remember it. Memory only holds what was "
+    "stored, so never claim the user did not mention or tell you something "
+    "(e.g. not \"you never told me\" / \"你之前没跟我提过\"); do not invent an answer."
 )
 
 FACT_CLIP = 300

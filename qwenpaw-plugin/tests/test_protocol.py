@@ -31,8 +31,8 @@ def test_every_failure_status_says_unavailable_and_not_evidence() -> None:
 
 def test_failure_text_never_reads_as_empty() -> None:
     for state in ("not-installed", "not-logged-in", "unreachable"):
-        text = failure_text(CliFailure(state, "boom"), "search Memory Lake")  # type: ignore[arg-type]
-        assert text.startswith("Could not search Memory Lake")
+        text = failure_text(CliFailure(state, "boom"), "search MemoryLake")  # type: ignore[arg-type]
+        assert text.startswith("Could not search MemoryLake")
         assert 'no relevant memories' in text
     assert "(boom)" in failure_text(CliFailure("unreachable", "boom"), "x")
 
@@ -46,3 +46,21 @@ def test_status_from_failure_mapping() -> None:
 def test_unconfigured_block_points_at_status_command() -> None:
     assert "/memorylake-status" in UNCONFIGURED_BLOCK
     assert "Do not claim to remember" in UNCONFIGURED_BLOCK
+
+
+def test_sync_block_only_when_syncing() -> None:
+    from memorylake_backend.protocol import SYNC_BLOCK
+    connected = BackendStatus("connected", projects=1)
+    assert SYNC_BLOCK not in build_memory_prompt(connected, can_write=True)
+    text = build_memory_prompt(connected, can_write=True, syncing=True)
+    assert SYNC_BLOCK in text and text.index(PROTOCOL_WRITE) < text.index(SYNC_BLOCK) < text.index("### Status")
+    assert "Tool calls, tool results, and your reasoning are not recorded" in SYNC_BLOCK
+
+
+def test_read_protocol_teaches_the_search_playbook() -> None:
+    from memorylake_backend.protocol import PROTOCOL_READ
+    for heading in ("### Automatic recall, and what it misses", "### When to search", "### How to write a query", "### How to read results"):
+        assert heading in PROTOCOL_READ
+    assert "verbatim" in PROTOCOL_READ and "differently phrased" in PROTOCOL_READ
+    assert "Memories carry no scope" in PROTOCOL_READ
+    assert PROTOCOL_READ.index("### Automatic recall") < PROTOCOL_READ.index("### When to search") < PROTOCOL_READ.index("### How to write a query")

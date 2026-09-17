@@ -52,3 +52,30 @@ def test_shared_disable_reaches_only_shared_reliance() -> None:
 def test_can_write_requires_actor() -> None:
     assert resolve_config(MemoryLakeConfig(workspace="ws"), None).can_write is False
     assert resolve_config(MemoryLakeConfig(workspace="ws", actor="x"), None).can_write is True
+
+
+def test_sync_knobs_default_off_and_need_actor_and_project() -> None:
+    from memorylake_backend.config import MemoryLakeConfig, resolve_config
+    eff = resolve_config(MemoryLakeConfig(workspace="ws"), None)
+    assert eff.sync_conversations is False and eff.sync_interval == 1 and eff.max_message_chars == 8000
+    assert not eff.can_sync and eff.sync_blocker == ""
+    eff = resolve_config(MemoryLakeConfig(workspace="ws", sync_conversations=True), None)
+    assert not eff.can_sync and eff.sync_blocker == "no actor and no project configured"
+    eff = resolve_config(MemoryLakeConfig(workspace="ws", actor="a", sync_conversations=True), None)
+    assert eff.sync_blocker == "no project configured"
+    eff = resolve_config(MemoryLakeConfig(workspace="ws", actor="a", project=" p ", sync_conversations=True, sync_interval=3), None)
+    assert eff.can_sync and eff.project == "p" and eff.sync_interval == 3 and eff.sync_blocker == ""
+    # the shared file's machine-wide switch still wins
+    eff = resolve_config(MemoryLakeConfig(actor="a", project="p", sync_conversations=True), {"workspace": "ws", "enabled": "false"})
+    assert eff.state == "disabled" and not eff.can_sync and eff.sync_blocker == ""
+
+
+def test_sync_bounds_are_validated() -> None:
+    import pytest
+    from memorylake_backend.config import MemoryLakeConfig
+    with pytest.raises(ValueError):
+        MemoryLakeConfig(sync_interval=0)
+    with pytest.raises(ValueError):
+        MemoryLakeConfig(sync_interval=21)
+    with pytest.raises(ValueError):
+        MemoryLakeConfig(max_message_chars=100)

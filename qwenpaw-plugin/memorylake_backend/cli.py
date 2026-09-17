@@ -232,6 +232,78 @@ def actor_me_argv(binary: str | Path) -> list[str]:
     return [str(binary), "actor", "me"]
 
 
+def actor_get_argv(binary: str | Path, custom_id: str) -> list[str]:
+    """``memorylake actor get --by-custom-id`` — find the Agent's own actor."""
+    return [str(binary), "actor", "get", "--by-custom-id", "--", custom_id]
+
+
+def actor_create_argv(binary: str | Path, custom_id: str, display_name: str) -> list[str]:
+    """``memorylake actor create`` for the ASSISTANT that speaks for this Agent."""
+    return [
+        str(binary), "actor", "create", "--custom-id", custom_id,
+        "--display-name", display_name, "--type", "ASSISTANT",
+    ]
+
+
+def actor_bind_argv(binary: str | Path, actor: str, workspace: str) -> list[str]:
+    return [str(binary), "actor", "bind", "--actor", actor, "--workspace", workspace]
+
+
+def conversation_get_argv(binary: str | Path, workspace: str, custom_id: str) -> list[str]:
+    return [
+        str(binary), "conversation", "get", "--workspace", workspace, "--by-custom-id", "--", custom_id,
+    ]
+
+
+def conversation_create_argv(
+    binary: str | Path,
+    workspace: str,
+    custom_id: str,
+    project: str,
+    actors: Sequence[str],
+    name: str,
+    metadata: dict[str, str] | None = None,
+) -> list[str]:
+    """``memorylake conversation create`` — one per QwenPaw session."""
+    argv = [
+        str(binary), "conversation", "create", "--workspace", workspace,
+        "--custom-id", custom_id, "--project", project, "--actors", ",".join(actors),
+        "--name", name,
+    ]
+    for key, value in (metadata or {}).items():
+        argv += ["--metadata", f"{key}={value}"]
+    return argv
+
+
+def message_append_argv(
+    binary: str | Path,
+    conversation: str,
+    actor: str,
+    custom_id: str,
+    texts: Sequence[str],
+    timestamp: str = "",
+    metadata: dict[str, str] | None = None,
+) -> list[str]:
+    """``memorylake conversation message append`` — TEXT blocks only. Tool
+    calls, tool results, and thinking never leave the host (user decision)."""
+    argv = [
+        str(binary), "conversation", "message", "append",
+        "--actor", actor, "--custom-id", custom_id,
+    ]
+    for text in texts:
+        argv += ["--text", text]
+    if timestamp:
+        argv += ["--timestamp", timestamp]
+    for key, value in (metadata or {}).items():
+        argv += ["--metadata", f"{key}={value}"]
+    argv += ["--", conversation]
+    return argv
+
+
+def cook_status_argv(binary: str | Path, workspace: str, conversation: str) -> list[str]:
+    return [str(binary), "conversation", "cook-status", "--workspace", workspace, "--", conversation]
+
+
 def version_argv(binary: str | Path) -> list[str]:
     return [str(binary), "version"]
 

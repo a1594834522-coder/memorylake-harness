@@ -1,4 +1,4 @@
-# Memory Lake for QwenPaw — design
+# MemoryLake for QwenPaw — design
 
 Status: implemented (v0.1.0). §9 records what was verified and what changed.
 
@@ -30,7 +30,7 @@ does not build any of that machinery.
 So this plugin is a **memory backend**, not a middleware, not a tool bundle.
 It replaces ReMe Light for the Agents that select it. That exclusivity is a
 platform design (there is a built-in `"none"` backend for the same slot), and
-the README states it plainly: an Agent on Memory Lake is not on ReMe.
+the README states it plainly: an Agent on MemoryLake is not on ReMe.
 
 The product story is the same one as opencode: **connect the memories you
 already have.** A user running Claude Code already has memories in Memory
@@ -69,7 +69,7 @@ the backend an `agent.json` names is registered before its manager is built.
 api.register_memory_backend(
     backend_id="memorylake",        # normalized: strip + lower
     factory=MemoryLakeMemoryManager, # (context: MemoryBackendContext) -> manager
-    label="Memory Lake",
+    label="MemoryLake",
     config_schema=MemoryLakeConfig,  # pydantic; validates memory_backend_configs.memorylake
     metadata={
         "description": ...,
@@ -184,7 +184,7 @@ out to matter, it is a second plugin, not a mode of this one.
 
 ### D2 — CLI remains the only transport; the plugin supplies it
 
-Every harness talks to Memory Lake through the `memorylake` CLI and never
+Every harness talks to MemoryLake through the `memorylake` CLI and never
 through HTTP. That holds here. What changes is who installs it (§2.6):
 
 Resolution order in `start()`:
@@ -243,20 +243,79 @@ machine-wide switch does not reach it. The per-project override
 not a repository checkout and there is no session directory to walk up from.
 `MEMORYLAKE_PLUGIN_DATA` relocates the shared tree, as in every harness.
 
-### D4 — No automatic write-back
+### D4 — Conversation sync, opt-in, text only (revised in 0.2.0)
 
-`auto_memory()` returns `""` and `get_auto_memory_interval()` returns `0`.
-The platform will still call `submit_auto_memory` on compaction; the worker
-gets an empty result and records a no-op.
+v0.1.0 had no automatic write-back. v0.2.0 adds it as an **opt-in**
+(`sync_conversations`, default `false`) and takes the conversation route
+rather than local extraction: `auto_memory()` appends the turns' text to one
+MemoryLake conversation per QwenPaw session (`memorylake conversation
+message append`) and the server distills memories from it. Reasons:
 
-This is the same position as every other harness (opencode D4): memories are
-written when the model calls `memory_remember`, and nothing else is uploaded.
-QwenPaw makes the opposite very easy — ReMe Light and PowerContext both write
-every turn — and a v2 may offer an opt-in extraction step. It is not in v1
-because it changes what the product uploads, and that decision belongs to a
-release note, not to a default.
+- The CLI's conversation commands exist for exactly this: messages are
+  stored at once, facts are extracted in the background, `--custom-id`
+  makes an append idempotent, `cook-status` tells when the memory is built.
+- Local extraction would mean running an LLM in the plugin, i.e. rebuilding
+  ReMe Light, and paying for it twice.
+- dsh's roadmap already names "session → conversation cook"; one server-side
+  semantics for all harnesses.
+
+**When QwenPaw calls us** (`agents/middlewares.py`, `command_handler.py`):
+after every `sync_interval` external user turns (`on_reply`), when the
+context is compacted (`on_compress_context`, all pending turns regardless
+of the interval), on the user's `/compact`, and on `/new`. Automation
+sources (cron, heartbeat, portability) never trigger it. A turn is the
+external user message plus everything up to the next one; internal control
+messages are already stripped by the platform. Turns can arrive more than
+once (compaction overlapping with the periodic batch), which is why every
+append carries the QwenPaw message id as `--custom-id`.
+
+**What is sent.** TEXT blocks only — the user's words and the assistant's
+words. Tool calls, tool results, thinking, images, and files are dropped
+(user decision; it also keeps file contents off the wire). The synthetic
+recall exchange the platform injects before model calls is stripped first.
+Messages longer than `max_message_chars` are clipped and flagged
+`truncated=true` in metadata.
+
+**Identities.** The user's messages go out as the configured human actor;
+the assistant's as an `ASSISTANT` actor the plugin creates once per Agent
+(custom id `qwenpaw-agent:<agent_id>`, bound to the workspace). The
+conversation's custom id is `qwenpaw:<agent_id>:<session_id>`; it needs a
+`project` (the CLI requires one), which is why sync stays inactive — and
+says so in `/memorylake-status` — until both actor and project are set.
+
+**Reliability.** State lives in `plugin-state/memory-memorylake/sync/<agent>/`:
+the assistant actor id, and per session the conversation id, the ids
+already appended, and the messages of a batch that did not fully land.
+Those are retried at the start of the next batch. Appends to one
+conversation are serialized server-side; QwenPaw's auto-memory worker is
+serial per Agent, so we never race ourselves. We never pass `--wait`: cook
+is background work and must not hold the worker.
+
+**Prompt.** When sync is active the system prompt gains a paragraph telling
+the model the conversation is recorded and `memory_remember` is for facts
+the user explicitly asks to keep, so nothing is stored twice.
 
 ### D5 — Automatic recall on, using the platform's flow
+
+Two adjustments to that flow, both in the manager (0.2.0):
+
+- **The query is the whole message.** The base class truncates the user's
+  message to 50 characters before searching, which cuts most real questions
+  in half. `_build_query` is overridden to use the full text, capped at 300.
+- **Some messages are not searched.** Slash commands, bare acknowledgements
+  ("ok", "好的", "谢谢"), and messages with fewer than four letters or digits
+  skip recall (`recall.py`). Nothing rewrites the user's words: the protocol
+  tells the model recall ran verbatim and when to search again with a
+  better query, and a rewrite without a model would make that false.
+
+The protocol text itself (`PROTOCOL_READ`) is a search playbook rather than
+a rule list: what automatic recall predictably misses, when to search, how
+to phrase a query as the memory would be written (with examples), how many
+reformulations before saying nothing is stored, and how to use a hit. It
+stays in the system prompt — a skill would be installed per workspace, so
+Agents on another backend would see instructions for a tool they lack, and
+loading it on demand puts the "should I search" judgment behind an extra
+step. About 990 words with sync on.
 
 `get_auto_memory_search_options()` returns `AutoMemorySearchOptions(
 max_results=auto_recall_top_k)` when `auto_recall` is on (default), `None`
@@ -452,7 +511,7 @@ Works against a running QwenPaw (hot-loaded via the install API) and against
 a stopped one (loaded on next start). Docker: the same command through
 `docker exec`, or the Console's plugin page (upload or URL).
 
-Then, per Agent: Console → Agent settings → memory backend → Memory Lake, fill
+Then, per Agent: Console → Agent settings → memory backend → MemoryLake, fill
 the form, save. Or edit `agent.json`:
 
 ```json
@@ -473,7 +532,11 @@ enough that stubbing it would test the stub):
 - `cli` — argv construction with `--`, resolution order, failure classification
 - `render` — ordering, clipping, no score ever rendered, empty hint
 - `install` — good checksum installs, bad checksum deletes and raises
-- `manager` — each row of the D7 table; `_search_for_auto_memory` returns
+- `sync` — text-only shaping, identity lookup/create, idempotent replay,
+  failed-batch retry, state files surviving garbage
+- `manager` — sync off → interval 0 and no prompt paragraph; on without a
+  project → inactive and stated; on → turns appended, synthetic recall
+  stripped, failures reflected in status; each row of the D7 table; `_search_for_auto_memory` returns
   `None` on empty and on failure; `memory_remember` without a fact id does not
   claim success; tool names are exactly the three shared names
 
@@ -485,9 +548,9 @@ Code.
 
 ## 8. Non-goals
 
-- Automatic write-back (D4)
+- Local memory extraction (D4: the server distills; the plugin only records)
 - Coexisting with ReMe Light on one Agent (D1)
-- Direct HTTP to Memory Lake
+- Direct HTTP to MemoryLake
 - Showing relevance scores to the model
 - Listing in the AgentScope plugin market or download CDN — a later step that
   needs their packaging pipeline
@@ -498,7 +561,57 @@ Code.
 
 ## 9. Status
 
-Implemented as specified: all modules in §4, 70 tests against the real
+**Search-playbook evaluation (2026-09-17):** the playbook prompt (D5) was
+iterated against a running QwenPaw (Claude via the Console, a throwaway
+Agent `ml-eval`, 8 seeded facts, 13 questions: direct, rephrased, pronoun
+follow-up, relative date, two topics in one message, decision rationale,
+short follow-up, a fact never stored, a "did I tell you" trap, an implicit
+preference before writing code). Findings that changed the code:
+
+- With automatic recall on, the model answered 12/13 without ever calling
+  `memory_search`; recall alone covers small workspaces. The prompt matters
+  when recall misses or is off, so the playbook was tuned with recall off.
+- With recall off (v1), the model searched proactively but wrote English
+  queries for Chinese memories, borrowed `recall_history`'s argument shape
+  (`op`, `k`, `all_agents`) for `memory_search`, and sometimes emitted a
+  parallel call with empty arguments. v2/v3 of the prompt name the exact
+  signature and say "the user's language first"; `memory_search` now runs
+  the query anyway when stray arguments arrive and appends a one-line
+  correction to the result, and an empty call gets an error that names the
+  right shape. Empty calls still appear as a second parallel tool call and
+  are a model-side artifact we only make cheap.
+- A two-topic question was sometimes answered after searching one topic.
+  The playbook now says a message asking two things is two searches, and
+  "no record" may only be reported for a part that was searched. Both
+  topics were searched in every run afterwards.
+- On a fact never stored, the model tended to say "you never told me". The
+  rule "you know what is stored, not what the user said" is in the prompt
+  and repeated in the empty-result text the tool returns, which is the
+  moment the model needs it. It moved the phrasing in about a third of
+  runs; the rest still assert the user never mentioned it. Known limitation.
+- The implicit-preference case (English code comments) never triggered a
+  search before writing code, with or without the bullet asking for it.
+  The bullet stays; recall-on covers it when the preference is stored.
+
+Final: 12/13 with recall on, 12/13 with recall off (v3), the miss being the
+phrasing above. The evaluation script lives outside the repo (it needs a
+live QwenPaw and an API key) and is described in `qwenpaw-plugin-design` in
+the maintainer's notes.
+
+**0.2.0 (2026-09-17):** conversation sync (D4 revised) implemented in
+`memorylake_backend/sync.py`, wired through `auto_memory` /
+`get_auto_memory_interval`, with the Console form's sync section (switch,
+project picker, interval) and the discover endpoint listing projects. 92
+tests. Verified end to end against the real CLI and backend: the manager
+created the per-Agent `ASSISTANT` actor and the per-session conversation,
+appended user and assistant text with the right actors, dropped a tool-only
+message, and a replay of the same turns appended nothing. Server-side
+probing settled two facts the design relies on: an `ASSISTANT` actor is
+accepted as a conversation participant, and `--timestamp` must be
+offset-aware (agentscope stamps naive local time, so `sync.normalize_timestamp`
+converts).
+
+**0.1.0:** implemented as specified: all modules in §4, 70 tests against the real
 `qwenpaw` 2.2.1 base class, the Console form built and committed. Verified
 beyond unit tests:
 

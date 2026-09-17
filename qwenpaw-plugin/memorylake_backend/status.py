@@ -25,11 +25,11 @@ async def handle_status(ctx: Any, args: str) -> Msg:
     if not isinstance(manager, MemoryLakeMemoryManager):
         backend = type(manager).__name__ if manager is not None else "none"
         return _reply(
-            "This Agent's memory backend is not Memory Lake "
+            "This Agent's memory backend is not MemoryLake "
             f"(current: {backend}). Switch it in the Agent's settings "
-            "(memory backend → Memory Lake) and try again.",
+            "(memory backend → MemoryLake) and try again.",
         )
     try:
         return _reply(await manager.status_report())
     except Exception as exc:  # diagnostics must never crash the command
-        return _reply(f"Memory Lake status failed: {type(exc).__name__}: {exc}")
+        return _reply(f"MemoryLake status failed: {type(exc).__name__}: {exc}")

@@ -1,9 +1,9 @@
 {
   "id": "memory-memorylake",
-  "name": "Memory Lake",
-  "version": "0.1.0",
-  "description": "Memory Lake as the long-term memory backend: cross-project, cross-machine, cross-client memory shared with Claude Code, Codex, dsh, and opencode.",
-  "author": "Memory Lake",
+  "name": "MemoryLake",
+  "version": "0.2.0",
+  "description": "MemoryLake as the long-term memory backend: cross-project, cross-machine, cross-client memory shared with Claude Code, Codex, dsh, and opencode.",
+  "author": "MemoryLake",
   "type": "memory",
   "entry": {
     "backend": "plugin.py",
@@ -24,6 +24,6 @@
     "frontend/node_modules"
   ],
   "meta": {
-    "memory_backends": [{ "id": "memorylake", "label": "Memory Lake" }]
+    "memory_backends": [{ "id": "memorylake", "label": "MemoryLake" }]
   }
 }

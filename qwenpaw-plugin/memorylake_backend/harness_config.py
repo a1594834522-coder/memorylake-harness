@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The shared Memory Lake harness tree, as read by QwenPaw.
+"""The shared MemoryLake harness tree, as read by QwenPaw.
 
 ``~/.memorylake/harness/`` is a CROSS-HARNESS CONTRACT: the Claude Code,
 Codex, dsh, opencode, and QwenPaw plugins all read the same ``config.md`` and
