@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PostToolUse(Write|Edit) — sync the just-written memory file up to Memory Lake.
+# PostToolUse(Write|Edit) — sync the just-written memory file up to MemoryLake.
 #
 # The model is the author; this hook is only a courier. It reads the final
 # file from disk (never tool_input: Edit carries only old/new fragments) and
@@ -70,11 +70,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # script's own contract already forbids, so report it the same way the rest of
 # the file does: exit 2 with the reason on stderr, which asyncRewake surfaces.
 if ! command -v jq >/dev/null 2>&1; then
-  # Only for someone who configured Memory Lake: an unconfigured project must
+  # Only for someone who configured MemoryLake: an unconfigured project must
   # see no trace of this plugin, and nothing was going to be synced anyway.
   # ml_load_config parses frontmatter with awk, so it works without jq.
   ml_load_config "$PWD" || exit 0
-  printf '[Memory Lake] this memory was saved locally but NOT synced: the jq dependency is missing, so the sync hook cannot run. Install jq (brew install jq / apt-get install jq); a later memory write retries the sync automatically.\n' >&2
+  printf '[MemoryLake] this memory was saved locally but NOT synced: the jq dependency is missing, so the sync hook cannot run. Install jq (brew install jq / apt-get install jq); a later memory write retries the sync automatically.\n' >&2
   exit 2
 fi
 
@@ -125,7 +125,7 @@ slug=$(basename -- "$file_path")
 # reasonably believe is now available everywhere. exit 2 + stderr is the
 # asyncRewake wake-up contract.
 fail() {
-  printf '[Memory Lake] "%s" was saved locally but NOT synced to Memory Lake (%s). It stays local-only until a later memory write retries the sync automatically; /memorylake:status can check connectivity.\n' "$slug" "$1" >&2
+  printf '[MemoryLake] "%s" was saved locally but NOT synced to MemoryLake (%s). It stays local-only until a later memory write retries the sync automatically; /memorylake:status can check connectivity.\n' "$slug" "$1" >&2
   exit 2
 }
 

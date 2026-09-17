@@ -1,5 +1,5 @@
 ---
-description: Show or change whether this project's memories sync to Memory Lake
+description: Show or change whether this project's memories sync to MemoryLake
 argument-hint: "[on|off]"
 allowed-tools: Bash, Read, Write, Edit
 ---
@@ -52,7 +52,7 @@ sync_on_write: false
 Ensure `.gitignore` covers `.claude/*.local.md`; append if missing. Then
 confirm to the user, and remind them: memories already uploaded are NOT
 recalled by this — the switch only governs the future. Offer to list what the
-project has in Memory Lake (`memorylake project get --workspace <ws>
+project has in MemoryLake (`memorylake project get --workspace <ws>
 <custom-id> --by-custom-id`, then `project document list`) if they want to
 review or delete. The custom id is the repo's derived identity — its
 normalized remote URL with `/` and `:` folded to `-`

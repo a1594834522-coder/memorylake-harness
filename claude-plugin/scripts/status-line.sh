@@ -6,7 +6,7 @@
 # not change what the model does, and the fourth — knowing who the user is — is
 # already covered by the locally loaded MEMORY.md. Injecting it every session
 # would be a fixed token cost on the majority of sessions that never touch
-# Memory Lake at all.
+# MemoryLake at all.
 #
 # What this line IS for: telling the model the system is online, and — more
 # importantly — telling it when the system is NOT. Without this, an unreachable
@@ -36,12 +36,12 @@ input=$(cat 2>/dev/null || printf '{}')
 cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
 
 # Not configured for this project: say nothing at all. A project that does not
-# use Memory Lake should see no trace of this plugin.
+# use MemoryLake should see no trace of this plugin.
 ml_load_config "${cwd:-$PWD}" || exit 0
 ml_flag_enabled "${ML_STATUS_LINE:-}" || exit 0
 
 CLI=$(ml_cli)
-[ -n "$CLI" ] || emit "Memory Lake: the 'memorylake' CLI is not installed, so memory recall is unavailable this session. Do not treat missing recall results as 'no such memory'. To set it up, suggest the user run /memorylake:init — it can download the CLI and walk through login and configuration."
+[ -n "$CLI" ] || emit "MemoryLake: the 'memorylake' CLI is not installed, so memory recall is unavailable this session. Do not treat missing recall results as 'no such memory'. To set it up, suggest the user run /memorylake:init — it can download the CLI and walk through login and configuration."
 
 CACHE_DIR="$(ml_data_dir)/status"
 CACHE_FILE="$CACHE_DIR/${ML_WORKSPACE}.txt"
@@ -68,12 +68,12 @@ fi
 if [ -z "$projects" ]; then
   projects=$("$CLI" project list --workspace "$ML_WORKSPACE" 2>/dev/null | jq -r '(.items // []) | length' 2>/dev/null)
   if [ -z "$projects" ]; then
-    emit "Memory Lake: workspace ${ML_WORKSPACE} is unreachable. Memory recall is UNAVAILABLE this session — if a recall returns nothing, say the backend could not be reached rather than concluding the memory does not exist."
+    emit "MemoryLake: workspace ${ML_WORKSPACE} is unreachable. Memory recall is UNAVAILABLE this session — if a recall returns nothing, say the backend could not be reached rather than concluding the memory does not exist."
   fi
   mkdir -p "$CACHE_DIR" 2>/dev/null && printf '%s' "$projects" >"$CACHE_FILE" 2>/dev/null
 fi
 
-line="Memory Lake: connected · workspace ${ML_WORKSPACE} · ${projects} project(s). Cross-project and cross-device memories are searchable with \`ml-recall \"<query>\"\`."
+line="MemoryLake: connected · workspace ${ML_WORKSPACE} · ${projects} project(s). Cross-project and cross-device memories are searchable with \`ml-recall \"<query>\"\`."
 
 # One-time transparency nudge: a project that syncs but has never synced yet
 # gets told, once, that its memories will upload and how to opt out. The deny
@@ -82,7 +82,7 @@ line="Memory Lake: connected · workspace ${ML_WORKSPACE} · ${projects} project
 custom_id="${ML_PROJECT_CUSTOM_ID:-$(ml_project_identity "${cwd:-$PWD}")}"
 if [ -n "${ML_SYNC_ON_WRITE:-}" ] && ml_flag_enabled "$ML_SYNC_ON_WRITE" && ! ml_sync_denied "${cwd:-$PWD}" \
     && [ ! -d "$(ml_data_dir)/sync/${ML_WORKSPACE}/$(ml_cid_slug "$custom_id")" ]; then
-  line="$line This project's memories will sync to Memory Lake on write — first time for this project; opt out by adding its path to sync_deny in ~/.memorylake/harness/config.md, or tell me to turn it off here."
+  line="$line This project's memories will sync to MemoryLake on write — first time for this project; opt out by adding its path to sync_deny in ~/.memorylake/harness/config.md, or tell me to turn it off here."
 fi
 
 emit "$line"

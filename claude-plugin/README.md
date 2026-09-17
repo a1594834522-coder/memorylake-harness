@@ -1,15 +1,15 @@
-# Memory Lake for Claude Code
+# MemoryLake for Claude Code
 
 Cross-device long-term memory for Claude Code, backed by
-[Memory Lake](https://github.com/memorylake-ai) via the `memorylake` CLI.
+[MemoryLake](https://github.com/memorylake-ai) via the `memorylake` CLI.
 
 Claude Code already has good local auto-memory — but it is scoped to **one git
 repository on one machine**. This plugin does not replace it. It connects it to
-Memory Lake, so memories written from another project, another machine, or
+MemoryLake, so memories written from another project, another machine, or
 another client are reachable, and memories written here become reachable
 everywhere else.
 
-| | Local auto-memory | Memory Lake |
+| | Local auto-memory | MemoryLake |
 | --- | --- | --- |
 | Scope | one repo, one machine | all projects, all devices, all clients |
 | Latency | zero, loaded at session start | a search away |
@@ -110,7 +110,7 @@ Run `/memorylake:status` to check the whole setup at once.
 ## What it does
 
 **Reading.** When Claude opens one of its own memory files, a hook reminds it
-once per session that Memory Lake may hold related memories, and how to phrase
+once per session that MemoryLake may hold related memories, and how to phrase
 a search. Claude writes the query itself:
 
 ```bash
@@ -122,7 +122,7 @@ The hook makes no network call — it only injects the reminder, so it adds no
 latency to reading local files.
 
 **Writing.** When Claude saves to its own auto-memory, a background hook
-syncs it to Memory Lake — with zero added latency in the conversation, routed
+syncs it to MemoryLake — with zero added latency in the conversation, routed
 by memory type:
 
 - `type: user` / `feedback` (one-line preferences) become **facts**, stored
@@ -132,14 +132,14 @@ by memory type:
   description stores the new statement (semantic conflicts between facts are
   resolved by the backend)
 - `type: project` / `reference` (evolving knowledge documents) are uploaded
-  as **files** into a per-project Memory Lake folder and indexed for
+  as **files** into a per-project MemoryLake folder and indexed for
   full-text search; indexing takes a moment
 
 Rewrites with unchanged content are skipped (hash check). A failed sync wakes
 Claude with an explicit report — it never masquerades as success — and the
 next memory write retries automatically.
 
-**Session start.** One line reporting whether Memory Lake is reachable. Not a
+**Session start.** One line reporting whether MemoryLake is reachable. Not a
 digest: a workspace summary would cost tokens in every session, including the
 majority that never touch memory at all. The line exists mainly so an
 *unreachable* backend is stated out loud — otherwise an outage is
@@ -157,14 +157,14 @@ and idempotent through the same hash state the hook uses.
 `MEMORY.md` is loaded automatically at session start without a tool call, so
 the read hook does not fire for it. The reminder only appears when Claude opens
 an individual memory file — high precision, but it will not catch every session
-where Memory Lake would have helped. Ask for a recall directly, or run
+where MemoryLake would have helped. Ask for a recall directly, or run
 `ml-recall` yourself, when you know something is stored.
 
 ## Privacy
 
-- `ml-recall` sends your query text to your Memory Lake workspace
+- `ml-recall` sends your query text to your MemoryLake workspace
 - With `sync_on_write: true` in the global config, memory files Claude writes
-  in ANY project on this machine are uploaded to your Memory Lake workspace —
+  in ANY project on this machine are uploaded to your MemoryLake workspace —
   including anything Claude chose to note about a project. Setting that flag
   is the consent; opt individual projects out with a
   `.claude/memorylake.local.md` containing `sync_on_write: false`, or set the

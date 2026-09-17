@@ -1,13 +1,13 @@
 ---
 name: memorylake
-description: Search the user's cross-device long-term memory in Memory Lake. Use when the user refers to something they told you before, asks what you know about them or their preferences, mentions a past decision, project, or document you have no local record of, or when local auto-memory turns up nothing and the answer plausibly exists elsewhere. Also covers how to phrase recall queries and read results.
+description: Search the user's cross-device long-term memory in MemoryLake. Use when the user refers to something they told you before, asks what you know about them or their preferences, mentions a past decision, project, or document you have no local record of, or when local auto-memory turns up nothing and the answer plausibly exists elsewhere. Also covers how to phrase recall queries and read results.
 ---
 
-# Memory Lake
+# MemoryLake
 
-Memory Lake is the user's long-term memory **across projects, machines, and
+MemoryLake is the user's long-term memory **across projects, machines, and
 clients**. Claude Code's own auto-memory covers only the current repository on
-this machine — Memory Lake is where everything else lives, including memories
+this machine — MemoryLake is where everything else lives, including memories
 written from other apps and other devices.
 
 ## When to reach for it
@@ -18,7 +18,7 @@ written from other apps and other devices.
 - Local memory came up empty and the answer plausibly exists somewhere else
 
 Local auto-memory stays the first stop — it is already in context and costs
-nothing. Memory Lake is the second stop, for what local memory structurally
+nothing. MemoryLake is the second stop, for what local memory structurally
 cannot hold.
 
 ## Searching
@@ -65,9 +65,9 @@ contradicting the user about their own history.
 ## Writing memory
 
 Write to local auto-memory exactly as you normally would. Anything you save in
-this project's memory directory is synced up to Memory Lake automatically, so
+this project's memory directory is synced up to MemoryLake automatically, so
 it becomes available from the user's other projects and devices. There is no
-separate "save to Memory Lake" step.
+separate "save to MemoryLake" step.
 
 ## Controlling which projects sync
 

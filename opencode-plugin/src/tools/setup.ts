@@ -13,7 +13,7 @@ import { tool } from '@opencode-ai/plugin'
 
 import { SETUP_INSTRUCTIONS } from '../setup.js'
 
-const DESCRIPTION = `Set up Memory Lake, the long-term memory backend for this plugin. It is installed but not yet configured, so no memory is available until this runs.
+const DESCRIPTION = `Set up MemoryLake, the long-term memory backend for this plugin. It is installed but not yet configured, so no memory is available until this runs.
 
 Call this when the user asks to set up, configure, connect, or enable memory — or when they ask why memory is not working.
 
@@ -28,7 +28,7 @@ export function setupTool() {
     description: DESCRIPTION,
     args: {},
     async execute(_args, ctx) {
-      ctx.metadata({ title: 'Memory Lake setup' })
+      ctx.metadata({ title: 'MemoryLake setup' })
       return SETUP_INSTRUCTIONS
     },
   })

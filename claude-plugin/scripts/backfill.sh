@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # backfill.sh [--dry-run] — sync every pre-existing memory file up to
-# Memory Lake, once.
+# MemoryLake, once.
 #
 # The write hook only sees memories written from now on; a fresh install sits
 # next to months of accumulated auto-memory that would otherwise never leave
@@ -29,7 +29,7 @@ DRY_RUN=0
 [ "${1:-}" = "--dry-run" ] && DRY_RUN=1
 
 command -v jq >/dev/null 2>&1 || { echo "backfill: jq is required" >&2; exit 1; }
-ml_load_config "$PWD" || { echo "backfill: Memory Lake is not configured (run /memorylake:init first)" >&2; exit 1; }
+ml_load_config "$PWD" || { echo "backfill: MemoryLake is not configured (run /memorylake:init first)" >&2; exit 1; }
 
 # Reverse the /-to-dash escaping of a memory directory name, using directory
 # existence to decide whether each dash is a separator or literal. Prints the

@@ -1,11 +1,11 @@
 ---
 name: memorylake-setup
-description: Set up or diagnose Memory Lake for this machine — CLI install, login, and global config, end to end. Use when the user asks to initialize, set up, configure, or troubleshoot Memory Lake / memorylake, when ml-recall reports NOT_CONFIGURED or CLI_NOT_FOUND, or when the session status line says Memory Lake is not installed or not configured.
+description: Set up or diagnose MemoryLake for this machine — CLI install, login, and global config, end to end. Use when the user asks to initialize, set up, configure, or troubleshoot MemoryLake / memorylake, when ml-recall reports NOT_CONFIGURED or CLI_NOT_FOUND, or when the session status line says MemoryLake is not installed or not configured.
 ---
 
-# Memory Lake setup
+# MemoryLake setup
 
-Walk the user from a bare plugin install to a working Memory Lake setup. Run
+Walk the user from a bare plugin install to a working MemoryLake setup. Run
 the stages in order; skip any stage that is already satisfied and say so.
 Never print, echo, or write the user's API key anywhere except the
 `memorylake auth login` command itself.
@@ -74,7 +74,7 @@ invoke it by full path.
 memorylake auth status
 ```
 
-If not logged in, ask the user for their API key (created in the Memory Lake
+If not logged in, ask the user for their API key (created in the MemoryLake
 console). The service has two deployments with **separate accounts**: the
 international one at [memorylake.ai](https://memorylake.ai) (the CLI's
 default) and the China one at [memorylake.cn](https://memorylake.cn). Ask
@@ -148,7 +148,7 @@ bash ~/.memorylake/scripts/sync-memories.sh --preview
 (Fixed path — the plugin installs the script there at session start, next to
 `ml-recall`.)
 
-Each line is one destination Memory Lake project: `UPLOAD` or `DENY`, the
+Each line is one destination MemoryLake project: `UPLOAD` or `DENY`, the
 project identity (derived from each summary's `cwd:` header — the repo's
 normalized remote URL like `github.com-acme-foo`, or its dash-folded path
 when it has no remote; `codex-memories` holds unattributable extension

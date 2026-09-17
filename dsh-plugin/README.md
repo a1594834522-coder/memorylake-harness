@@ -1,6 +1,6 @@
 # @memorylake/dsh-plugin
 
-Memory Lake for [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness):
+MemoryLake for [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness):
 persistent, cross-session, cross-project, cross-device memory.
 
 dsh ships no native memory capability, so this plugin is not a bridge to one —
@@ -36,7 +36,7 @@ The package publishes with built `lib/`, so no build allowance is needed. A
 source — but pnpm ≥10 will ask you to allowlist the build; prefer the
 registry install.
 
-## Zero-config on a machine that already has Memory Lake
+## Zero-config on a machine that already has MemoryLake
 
 Identity and switches live in the **shared `~/.memorylake/` tree**, not in
 this plugin:
@@ -60,7 +60,7 @@ and only to point at `/memorylake-init`.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `workspace` | — | Memory Lake workspace id. The only required key; absent means the plugin stays silent |
+| `workspace` | — | MemoryLake workspace id. The only required key; absent means the plugin stays silent |
 | `actor` | — | Actor id facts are attributed to; required for writes |
 | `enabled` | `true` | `false` switches the plugin off entirely |
 | `sync_on_write` | `true` | `false` makes memory read-only (the canonical per-project override) |
@@ -114,7 +114,7 @@ Row `memorylake-tools` (`@memorylake/dsh-plugin/tools`):
 
 ## v2 roadmap (deliberately not in v1)
 
-- **Session→conversation cook**: append dsh session transcripts as Memory Lake
+- **Session→conversation cook**: append dsh session transcripts as MemoryLake
   conversations and let the backend distill them into memories — dsh's
   "model-visible ⟺ logged" invariant makes the transcript complete, which no
   other harness guarantees. Privacy defaults off.

@@ -1,9 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "memorylake",
-  "displayName": "Memory Lake",
+  "displayName": "MemoryLake",
   "version": "0.6.5",
-  "description": "Cross-device long-term memory for Claude Code, backed by Memory Lake",
+  "description": "Cross-device long-term memory for Claude Code, backed by MemoryLake",
   "author": {
     "name": "MemoryLake"
   },

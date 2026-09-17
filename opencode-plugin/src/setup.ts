@@ -21,7 +21,7 @@ ones you skipped.
 
 ## Stage 0 — Is it already done elsewhere?
 
-The configuration is shared by every Memory Lake harness on this machine —
+The configuration is shared by every MemoryLake harness on this machine —
 Claude Code, Codex, dsh, and opencode all read the same file. Check first:
 
 \`\`\`bash

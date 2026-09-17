@@ -1,5 +1,5 @@
 /**
- * The shared Memory Lake harness configuration, as read by opencode.
+ * The shared MemoryLake harness configuration, as read by opencode.
  *
  * The file, its keys, and their semantics are a CROSS-HARNESS CONTRACT: the
  * Claude Code, Codex, dsh, and opencode plugins all read the same

@@ -1,5 +1,5 @@
 /**
- * Memory Lake for opencode.
+ * MemoryLake for opencode.
  *
  * opencode has no memory of its own — its only ambient instruction mechanism
  * is static `AGENTS.md` files — and it cannot read Claude Code's memory
