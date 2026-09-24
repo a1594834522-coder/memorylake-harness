@@ -1,0 +1,85 @@
+# MemoryLake for WorkBuddy
+
+Cross-device long-term memory for [WorkBuddy](https://www.workbuddy.cn),
+backed by MemoryLake via the `memorylake` CLI.
+
+WorkBuddy keeps its own memory -- `MEMORY.md` files and daily notes on this
+machine, plus its cloud profile. This plugin adds the memory that lives
+**everywhere else**: other WorkBuddy machines, Claude Code, Codex, and the
+other MemoryLake clients. It is deliberately assertive about it:
+
+- **Search first, every turn.** Each user message carries an instruction to
+  search MemoryLake before replying, and the first tool call of a turn that
+  skipped the search is held back once with an instruction to search.
+- **Every turn is remembered.** After each turn, the user's message and the
+  assistant's final reply are appended to a MemoryLake conversation (one per
+  WorkBuddy session); the server distills memories from it.
+
+All MemoryLake harnesses share one identity and data tree
+(`~/.memorylake/harness/`): a machine already set up for Claude Code, Codex,
+dsh, opencode, or QwenPaw needs no further setup.
+
+## Install
+
+In WorkBuddy: **Skills -> Plugins -> +** (add marketplace) ->
+`memorylake-ai/memorylake-harness`, then install **memorylake**. WorkBuddy reads this repository's
+`.workbuddy-plugin/marketplace.json`, which points at this directory; Claude
+Code keeps reading `.claude-plugin/`.
+
+Then, in a WorkBuddy session:
+
+```
+/memorylake:init
+```
+
+It installs the CLI if needed, logs in, and writes the shared config. Skip it
+on a machine that is already set up. `/memorylake:status` is the health check.
+
+## How it works
+
+WorkBuddy runs Claude-Code-style plugin hooks (command hooks only, on the
+desktop). The plugin uses four:
+
+| Hook | Script | What it does |
+| --- | --- | --- |
+| `SessionStart` | `scripts/session-start.sh` | Standing instructions (what MemoryLake is, search-first, what is synced) and a status line; re-sent after a compaction |
+| `UserPromptSubmit` | `scripts/prompt-submit.sh` | Starts the turn: resets the gate, queues the user's words for sync, injects the search-first reminder |
+| `PreToolUse` | `scripts/recall-gate.sh` | Marks the turn searched when the model runs `ml-recall`; otherwise holds back the turn's first other tool call, once |
+| `Stop` (async) | `scripts/sync-turn.sh` | Appends the queued user message and the final reply to the session's MemoryLake conversation |
+
+Why hooks and not the system prompt: WorkBuddy assembles its desktop system
+prompt from a fixed set of sources with no plugin slot, and switches off the
+CLI's own instruction files (`CODEBUDDY.md`, `rules/`) in desktop sessions.
+Hook output is injected as a `<system-reminder>` -- into the first message
+for `SessionStart`, into the current message for `UserPromptSubmit` -- which
+is the closest a plugin can get.
+
+### What is synced
+
+Text only: what the user typed (WorkBuddy's own injected context stripped)
+and the assistant's final reply, each clipped to 8000 characters. Tool calls,
+tool output, thinking, and attachments never leave the machine. Each message
+carries a custom id derived from its turn, so retries never duplicate.
+
+The conversation is filed under the project of the directory the session
+works in -- the same identity rule as the other harnesses (normalized git
+remote, else the physical path), so all clients meet in one project per
+repository or folder. Recall is not affected: `ml-recall` searches every
+project in the workspace.
+
+A failed sync keeps its messages queued under
+`~/.memorylake/harness/state/workbuddy/<session>/` and retries after the next
+turn; `/memorylake:status` shows the last outcome.
+
+## Configuration
+
+Keys in `~/.memorylake/harness/config.md` (or a folder's
+`.claude/memorylake.local.md`, which overrides key by key):
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `workspace`, `actor` | -- | Required; written by init |
+| `sync_conversations` | follows `sync_on_write` | Upload each turn. Outbound, so explicit opt-in |
+| `sync_deny` | -- | Comma-separated path prefixes that never upload |
+| `recall_reminder` | on | The per-turn search-first reminder |
+| `recall_gate` | on | Hold back the first unsearched tool call of a turn |
