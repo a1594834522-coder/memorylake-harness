@@ -1,0 +1,15 @@
+{
+  "name": "memorylake",
+  "displayName": "MemoryLake",
+  "displayNameEn": "MemoryLake",
+  "version": "0.1.0",
+  "description": "Cross-device long-term memory for QwenWork, backed by MemoryLake: a search-first reminder every turn and per-turn conversation sync",
+  "descriptionEn": "Cross-device long-term memory for QwenWork, backed by MemoryLake: a search-first reminder every turn and per-turn conversation sync",
+  "author": {
+    "name": "MemoryLake",
+    "url": "https://github.com/memorylake-ai/memorylake-harness"
+  },
+  "license": "MIT",
+  "category": "productivity",
+  "tags": ["memory", "recall", "long-term-memory", "memorylake"]
+}
