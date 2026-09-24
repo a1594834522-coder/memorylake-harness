@@ -124,11 +124,14 @@ async def test_first_sync_creates_actor_and_conversation(tmp_path, scripted) -> 
 
     appends = [c for c in scripted.calls if c[1:4] == ["conversation", "message", "append"]]
     assert len(appends) == 2
-    assert appends[0][4:8] == ["--actor", "act-human", "--custom-id", "m1"]
-    assert appends[0][8:10] == ["--text", "hello"]
+    # --workspace on every append: a fresh login remembers none, and append
+    # needs one to find the conversation's latest message (see cli.py).
+    assert all(c[4:6] == ["--workspace", "ws-1"] for c in appends)
+    assert appends[0][6:10] == ["--actor", "act-human", "--custom-id", "m1"]
+    assert appends[0][10:12] == ["--text", "hello"]
     assert appends[0][-2:] == ["--", "conv-1"]
     assert "role=user" in appends[0] and "agent=agent-1" in appends[0]
-    assert appends[1][4:8] == ["--actor", "act-bot", "--custom-id", "m2"] and "role=assistant" in appends[1]
+    assert appends[1][6:10] == ["--actor", "act-bot", "--custom-id", "m2"] and "role=assistant" in appends[1]
 
     # state persisted: actor cached, conversation and sent ids remembered
     assert s.state.assistant_actor() == "act-bot"

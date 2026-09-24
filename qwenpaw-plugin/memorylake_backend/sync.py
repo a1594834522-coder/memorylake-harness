@@ -344,7 +344,7 @@ class ConversationSync:
                 metadata["truncated"] = "true"
             result = await self._run(
                 cli.message_append_argv(
-                    self.binary, conversation_id, actor, message.id, message.texts,
+                    self.binary, self.workspace, conversation_id, actor, message.id, message.texts,
                     timestamp=message.timestamp, metadata=metadata,
                 ),
             )

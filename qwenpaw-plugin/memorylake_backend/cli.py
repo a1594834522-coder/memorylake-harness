@@ -277,6 +277,7 @@ def conversation_create_argv(
 
 def message_append_argv(
     binary: str | Path,
+    workspace: str,
     conversation: str,
     actor: str,
     custom_id: str,
@@ -285,9 +286,15 @@ def message_append_argv(
     metadata: dict[str, str] | None = None,
 ) -> list[str]:
     """``memorylake conversation message append`` — TEXT blocks only. Tool
-    calls, tool results, and thinking never leave the host (user decision)."""
+    calls, tool results, and thinking never leave the host (user decision).
+
+    ``--workspace`` is required in practice although the CLI's help says it
+    only matters with ``--wait``: without ``--parent``, append looks up the
+    conversation's latest message, and that lookup needs a workspace. A fresh
+    login remembers none (no ``memorylake workspace use`` yet), so without the
+    flag every append fails with "no workspace given and none remembered"."""
     argv = [
-        str(binary), "conversation", "message", "append",
+        str(binary), "conversation", "message", "append", "--workspace", workspace,
         "--actor", actor, "--custom-id", custom_id,
     ]
     for text in texts:

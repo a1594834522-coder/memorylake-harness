@@ -598,6 +598,16 @@ phrasing above. The evaluation script lives outside the repo (it needs a
 live QwenPaw and an API key) and is described in `qwenpaw-plugin-design` in
 the maintainer's notes.
 
+**0.2.1 (2026-09-24):** `message append` now passes `--workspace`. Without
+`--parent`, append looks up the conversation's latest message, and that
+lookup needs a workspace; a fresh CLI login remembers none (nothing has run
+`memorylake workspace use` yet), so every append failed with "no workspace
+given and none remembered" and the batch stayed pending. The CLI's help says
+the flag only matters with `--wait`. 0.2.0's live test passed only because
+that machine's profile already remembered a workspace; the failure surfaced
+in the QwenWork plugin, which shares the append call, on a fresh account.
+100 tests.
+
 **0.2.0 (2026-09-17):** conversation sync (D4 revised) implemented in
 `memorylake_backend/sync.py`, wired through `auto_memory` /
 `get_auto_memory_interval`, with the Console form's sync section (switch,
