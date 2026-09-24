@@ -187,7 +187,13 @@ while IFS= read -r line; do
   [ -n "$id" ] && [ -n "$text" ] || continue
   actor="$ML_ACTOR"
   [ "$side" = "assistant" ] && actor="$assistant_actor"
-  if err=$("$CLI" conversation message append --actor "$actor" --custom-id "$id" \
+  # --workspace is load-bearing although the CLI's help says it is only for
+  # --wait: without --parent, append looks up the conversation's latest
+  # message, and that lookup needs a workspace. A fresh login remembers none,
+  # so every append failed until something ran `memorylake workspace use`
+  # (measured live in QwenWork, 2026-09-24).
+  if err=$("$CLI" conversation message append --workspace "$ML_WORKSPACE" \
+      --actor "$actor" --custom-id "$id" \
       --text "$text" ${ts:+--timestamp "$ts"} \
       --metadata "role=${side}" --metadata harness=workbuddy \
       -- "$conversation_id" 2>&1 >/dev/null); then
