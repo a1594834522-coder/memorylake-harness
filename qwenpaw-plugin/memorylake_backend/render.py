@@ -58,6 +58,18 @@ class SearchRendering:
         return not self.facts and not self.documents
 
 
+
+def _span_texts(span: dict[str, Any]) -> list[str]:
+    """Matched text of one document block: the top-level ``text`` (figures),
+    else each ``highlight.chunks[].text`` (paragraphs, tables, NL2SQL)."""
+    if _str(span, "text"):
+        return [_str(span, "text")]
+    highlight = span.get("highlight")
+    chunks = highlight.get("chunks") if isinstance(highlight, dict) else None
+    if not isinstance(chunks, list):
+        return []
+    return [_str(c, "text") for c in chunks if isinstance(c, dict) and _str(c, "text")]
+
 def clip(text: str, limit: int) -> str:
     return text if len(text) <= limit else text[:limit] + "…"
 
@@ -94,9 +106,7 @@ def normalize_search_payload(payload: Any) -> SearchRendering:
         if not isinstance(item, dict):
             continue
         items = item.get("items") if isinstance(item.get("items"), list) else []
-        spans = tuple(
-            _str(span, "text") for span in items if isinstance(span, dict) and _str(span, "text")
-        )
+        spans = tuple(text for span in items if isinstance(span, dict) for text in _span_texts(span))
         documents.append(
             SearchDocument(
                 id=_str(item, "document_id") or "?",

@@ -64,3 +64,12 @@ def test_notice_precedes_results_and_replaces_hint_when_empty() -> None:
     assert render_search_result(SearchRendering(notice="degraded")) == "degraded"
     text = render_search_result(SearchRendering(notice="degraded", facts=(normalize_search_payload({"facts": [{"id": "1", "fact": "x"}]}).facts)))
     assert re.match(r"^degraded\n\nFACTS", text)
+
+
+def test_document_highlight_chunks() -> None:
+    rendering = normalize_search_payload({"documents": [{"document_id": "d", "items": [
+        {"type": "paragraph", "highlight": {"chunks": [{"text": "a"}, {"text": ""}, {"text": "b"}]}},
+        {"type": "figure", "text": "c", "highlight": {"chunks": [{"text": "ignored"}]}},
+        {"type": "table", "highlight": {"inner_tables": []}},
+    ]}]})
+    assert rendering.documents[0].spans == ("a", "b", "c")

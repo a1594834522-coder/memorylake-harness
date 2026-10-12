@@ -115,7 +115,7 @@ async def test_first_sync_creates_actor_and_conversation(tmp_path, scripted) -> 
 
     create_actor = scripted.argv_for("actor create")[0]
     assert create_actor == [BIN, "actor", "create", "--custom-id", "qwenpaw-agent:agent-1",
-                            "--display-name", "QwenPaw agent agent-1", "--type", "ASSISTANT"]
+                            "--display-name", "QwenPaw agent agent-1"]
     assert scripted.argv_for("actor bind")[0] == [BIN, "actor", "bind", "--actor", "act-bot", "--workspace", "ws-1"]
     create_conv = scripted.argv_for("conversation create")[0]
     assert create_conv[:12] == [BIN, "conversation", "create", "--workspace", "ws-1", "--custom-id",

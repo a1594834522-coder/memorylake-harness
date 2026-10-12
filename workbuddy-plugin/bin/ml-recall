@@ -132,7 +132,8 @@ printf '%s' "$raw" | jq -r --arg query "$QUERY" '
                     + ( if (.document_summary // "") != "" then " — " + (.document_summary | clip(120)) else "" end )
                     + "  [" + (.document_id // "?") + "]"
                     + ( ( .items // [] )
-                        | map(.text // "" | select(length > 0))
+                        | map(if (.text // "") != "" then [.text] else [(.highlight.chunks // [])[] | .text // ""] end)
+                        | flatten | map(select(length > 0))
                         | .[0:3]
                         | map("\n      \"" + clip(400) + "\"")
                         | join("") )

@@ -114,7 +114,7 @@ if [ -z "$assistant_actor" ]; then
   assistant_actor=$("$CLI" actor get --by-custom-id qwenwork-agent 2>/dev/null | jq -r '.id // empty' 2>/dev/null)
   if [ -z "$assistant_actor" ]; then
     assistant_actor=$("$CLI" actor create --custom-id qwenwork-agent --display-name QwenWork \
-        --type ASSISTANT 2>/dev/null | jq -r '.id // empty' 2>/dev/null)
+        2>/dev/null | jq -r '.id // empty' 2>/dev/null)
   fi
   [ -n "$assistant_actor" ] || { record error "could not resolve or create the QwenWork assistant actor"; exit 0; }
   # Binding an already-bound actor is refused by the server; not our failure.
