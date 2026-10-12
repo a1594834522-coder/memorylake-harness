@@ -31,9 +31,31 @@ DRY_RUN=0
 command -v jq >/dev/null 2>&1 || { echo "backfill: jq is required" >&2; exit 1; }
 ml_load_config "$PWD" || { echo "backfill: MemoryLake is not configured (run /memorylake:init first)" >&2; exit 1; }
 
-# Reverse the /-to-dash escaping of a memory directory name, using directory
-# existence to decide whether each dash is a separator or literal. Prints the
-# resolved absolute path, or nothing when resolution fails.
+# Claude Code names a project directory by turning every character outside
+# [A-Za-z0-9] of the project path into "-", so the name alone is ambiguous
+# ("/", ".", "_" and "-" all look the same). The session transcripts beside
+# memory/ record the real path in their "cwd" field: take the first recorded
+# cwd that still exists and escapes back to this exact name. Prints the path,
+# or nothing when no transcript yields one.
+ml_project_dir_from_transcripts() {
+  local proj="$1" escaped="$2" f cwd
+  for f in "$proj"/*.jsonl; do
+    [ -f "$f" ] || continue
+    while IFS= read -r cwd; do
+      [ -d "$cwd" ] || continue
+      if [ "$(printf '%s' "$cwd" | sed 's/[^A-Za-z0-9]/-/g')" = "$escaped" ]; then
+        printf '%s' "$cwd"
+        return 0
+      fi
+    done < <(head -n 200 "$f" | jq -r 'select(type == "object" and (.cwd | type) == "string") | .cwd' 2>/dev/null | awk '!seen[$0]++')
+  done
+  return 1
+}
+
+# Fallback when no transcript is left: reverse the escaping using directory
+# existence to decide whether each dash is a separator, a literal dash or a
+# dot. Cannot recover dot-leading components (".claude") or other escaped
+# characters. Prints the resolved absolute path, or nothing when it fails.
 ml_unescape_project_dir() {
   local rest="${1#-}" path="" seg=""
   while [ -n "$rest" ]; do
@@ -49,6 +71,9 @@ ml_unescape_project_dir() {
     esac
     if [ -d "$path/$seg" ]; then
       path="$path/$seg"
+      seg=""
+    elif [ -d "$path/${seg//-/.}" ]; then
+      path="$path/${seg//-/.}"
       seg=""
     fi
   done
@@ -69,7 +94,8 @@ declare -a failures=() unresolved_names=()
 for mem_dir in "$projects_dir"/*/memory; do
   [ -d "$mem_dir" ] || continue
   escaped=$(basename -- "$(dirname -- "$mem_dir")")
-  real=$(ml_unescape_project_dir "$escaped")
+  real=$(ml_project_dir_from_transcripts "$(dirname -- "$mem_dir")" "$escaped") \
+    || real=$(ml_unescape_project_dir "$escaped")
   if [ -z "$real" ]; then
     unresolved=$((unresolved + 1))
     unresolved_names+=("$escaped")
