@@ -241,7 +241,7 @@ def actor_create_argv(binary: str | Path, custom_id: str, display_name: str) -> 
     """``memorylake actor create`` for the ASSISTANT that speaks for this Agent."""
     return [
         str(binary), "actor", "create", "--custom-id", custom_id,
-        "--display-name", display_name, "--type", "ASSISTANT",
+        "--display-name", display_name,
     ]
 
 

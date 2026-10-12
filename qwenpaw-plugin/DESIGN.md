@@ -657,3 +657,10 @@ covers that case.
    and would not be fine for anything more.
 3. **Whether to lift `install_cli` downloads to a startup hook** so the first
    Agent's `start()` does not pay the download latency. Deferred until measured.
+
+**0.2.2 (2026-10-12):** follows CLI v20261009. `actor create` no longer
+takes `--type` (the open-api spec dropped `actor_type`), so the old argv
+failed with "unexpected argument" and a fresh install could never create the
+ASSISTANT actor that conversation sync writes as. Search document blocks now
+carry their text in `highlight.chunks[].text` (paragraphs, tables, NL2SQL);
+only figures keep a top-level `text`, so the renderer reads both.
