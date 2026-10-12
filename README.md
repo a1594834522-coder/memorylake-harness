@@ -128,3 +128,15 @@ Windows: `irm https://raw.githubusercontent.com/memorylake-ai/memorylake-cli/mai
 The full command reference — files, facts, databases, conversations, agents,
 skills, teams — is in the
 [memorylake-cli README](https://github.com/memorylake-ai/memorylake-cli#commands).
+
+## Beyond coding sessions
+
+The memory the harnesses write to is the same one a team's calls, meetings,
+documents and agents can land in.
+[memorylake-usecases](https://github.com/memorylake-ai/memorylake-usecases)
+has runnable demos of that — sales calls, meetings, a codebase, contract review,
+bookkeeping, agent bug replay, Reflexion-style agent memory and more — each a
+directory with sample data, a CLI runner that prints every command, a local web
+UI and a recorded run. A machine set up for any harness can run them as is: the
+demos use the CLI the harness installed and, with `MEMORYLAKE_API_KEY` unset, its
+login.
