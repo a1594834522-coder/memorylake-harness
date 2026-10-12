@@ -78,7 +78,7 @@ harness can skip it. See [`opencode-plugin/README.md`](opencode-plugin/README.md
 ## QwenPaw
 
 ```
-qwenpaw plugin install https://github.com/memorylake-ai/memorylake-harness/releases/download/qwenpaw-plugin-v0.2.1/memory-memorylake-0.2.1.zip
+qwenpaw plugin install https://github.com/memorylake-ai/memorylake-harness/releases/download/qwenpaw-plugin-v0.2.2/memory-memorylake-0.2.2.zip
 ```
 
 Then, per Agent, in the Console: Agent settings → Memory backend → Memory
